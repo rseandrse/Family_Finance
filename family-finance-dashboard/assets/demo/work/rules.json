@@ -1,0 +1,129 @@
+[
+ {
+  "id": "own",
+  "match": "OWN ACCOUNT|CUENTA PROPIA",
+  "type": "internal",
+  "note": "переводы на общий счёт"
+ },
+ {
+  "id": "sal-anna",
+  "match": "BRIGHTWAVE",
+  "dir": "in",
+  "type": "inc",
+  "label": "Зарплата Анны (Brightwave)",
+  "group": "Зарплата Анны",
+  "who": "Анна"
+ },
+ {
+  "id": "sal-ivan",
+  "match": "NOMINA TECNOLOGIAS",
+  "dir": "in",
+  "type": "inc",
+  "label": "Зарплата Ивана (Tecnologías Norte)",
+  "group": "Зарплата Ивана",
+  "who": "Иван"
+ },
+ {
+  "id": "rent",
+  "match": "ALQUILER",
+  "cat": "housing",
+  "label": "Аренда квартиры"
+ },
+ {
+  "id": "energy",
+  "match": "ENDESA",
+  "cat": "housing",
+  "label": "Электричество"
+ },
+ {
+  "id": "water",
+  "match": "AIGUES",
+  "cat": "housing",
+  "label": "Вода"
+ },
+ {
+  "id": "digi",
+  "match": "DIGI MOBIL",
+  "cat": "other",
+  "label": "Телефон и интернет"
+ },
+ {
+  "id": "music",
+  "match": "ESCOLA DE MUSICA",
+  "cat": "kids",
+  "label": "Музыкальная школа"
+ },
+ {
+  "id": "swim",
+  "match": "CLUB NATACIO",
+  "cat": "kids",
+  "label": "Бассейн"
+ },
+ {
+  "id": "camp",
+  "match": "CASAL ESTIU",
+  "cat": "kids",
+  "label": "Летний лагерь"
+ },
+ {
+  "id": "school",
+  "match": "MATERIAL ESCOLAR",
+  "cat": "kids",
+  "label": "Школьные принадлежности"
+ },
+ {
+  "id": "toys",
+  "match": "JUGUETTOS",
+  "cat": "kids",
+  "label": "Игрушки"
+ },
+ {
+  "id": "yoga",
+  "match": "YOGA SHALA",
+  "cat": "hobby_s",
+  "label": "Йога"
+ },
+ {
+  "id": "climb",
+  "match": "CLIMBING",
+  "cat": "hobby_m",
+  "label": "Скалолазание"
+ },
+ {
+  "id": "laptop",
+  "match": "LAPTOP",
+  "cat": "shopping",
+  "label": "Ноутбук"
+ },
+ {
+  "id": "work",
+  "match": "WORK TRIP|EXPENSE REFUND",
+  "type": "excl",
+  "label": "Командировка Ивана (возмещено)",
+  "reason": "Работа"
+ },
+ {
+  "id": "gift",
+  "match": "REGALO",
+  "cat": "shopping",
+  "label": "Подарки"
+ },
+ {
+  "id": "sale",
+  "match": "VENTA CARRITO",
+  "dir": "in",
+  "type": "inc",
+  "label": "Продажа коляски"
+ },
+ {
+  "id": "fruit",
+  "match": "FRUITERIA|CONDIS",
+  "cat": "groceries"
+ },
+ {
+  "id": "museum",
+  "match": "COSMOCAIXA",
+  "cat": "fun",
+  "label": "CosmoCaixa"
+ }
+]

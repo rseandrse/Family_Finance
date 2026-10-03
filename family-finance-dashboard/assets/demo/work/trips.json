@@ -1,0 +1,2 @@
+[{"id":"nuria","name":"Выходные в Вал-де-Нурия","short":"Вал-де-Нурия","start":"2026-02-13","end":"2026-02-15","cat":"travel","match":"NURIA|RENFE"},
+ {"id":"lisbon","name":"Отпуск в Лиссабоне","short":"Лиссабон","start":"2026-06-14","end":"2026-06-18","cat":"travel","match":"LISBOA","extra":[{"match":"VUELING","from":"2026-04-01","to":"2026-04-30"}]}]

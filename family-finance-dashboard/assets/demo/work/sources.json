@@ -1,0 +1,41 @@
+[
+ {
+  "file": "uploads/anna_bank.csv",
+  "account": "Карта Анны",
+  "date": "Date",
+  "date_format": "%d.%m.%Y",
+  "amount": "Amount",
+  "description": [
+   "Description"
+  ],
+  "balance": "Balance",
+  "account_currency": "EUR"
+ },
+ {
+  "file": "uploads/ivan_movimientos.xlsx",
+  "account": "Карта Ивана",
+  "header_row": 3,
+  "date": "Fecha",
+  "debit": "Cargo",
+  "credit": "Abono",
+  "description": [
+   "Concepto"
+  ],
+  "balance": "Saldo",
+  "account_currency": "EUR"
+ },
+ {
+  "file": "uploads/joint_account.csv",
+  "account": "Общий счёт",
+  "delimiter": ";",
+  "decimal": ",",
+  "date": "Date",
+  "date_format": "%d/%m/%Y",
+  "amount": "Amount",
+  "description": [
+   "Description"
+  ],
+  "balance": "Balance",
+  "account_currency": "EUR"
+ }
+]

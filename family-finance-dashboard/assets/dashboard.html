@@ -1,0 +1,1285 @@
+<title>Семейные финансы</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&display=swap">
+<style>
+/* Layout: warm-grey page, white rounded cards, black pills (justesim style). Header → month pills + person filter + tabs. Tabs: Месяц (KPIs, pace, discuss, ranked categories, big items, notes) · Год (tiles, lines with event tags, heat table, income, people) · Крупное и поездки (swimlanes, trip cards, list, not-in-budget) · Проверка (review queue). */
+:root{
+  --bg:#e7e6e2; --surface:#ffffff; --surface-2:#f3f2ef; --ink:#000000; --ink-2:rgba(0,0,0,.62); --muted:rgba(0,0,0,.45);
+  --line:rgba(0,0,0,.09); --grid:rgba(0,0,0,.07); --pill:#000000; --pill-ink:#ffffff; --accent:#0fa9b3;
+  --good:#0b8a3e; --bad:#c9302c; --inc:#2a78d6; --inc-2:#86b6ef; --inc-3:#cde2fb; --exp:#000000; --heat:42,120,214;
+  --c-housing:#2a78d6; --c-groceries:#eb6834; --c-kids:#1baf7a; --c-cafe:#eda100; --c-travel:#e87ba4; --c-hobby_s:#008300;
+  --c-hobby_m:#4a3aa7; --c-transport:#e34948; --c-fun:#104281; --c-shopping:#a33f12; --c-health:#0b6b4a; --c-other:#b5b3ab;
+  --t-1:#2a78d6; --t-2:#eb6834; --t-3:#eda100; --t-4:#e34948; --t-5:#b5b3ab;
+  --f:"Inter Tight","Helvetica Neue",Arial,system-ui,sans-serif;
+  --r-card:28px; --shadow:0 1px 2px rgba(0,0,0,.05),0 8px 24px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e0e0d; --surface:#1a1a19; --surface-2:#242422; --ink:#ffffff; --ink-2:rgba(255,255,255,.66); --muted:rgba(255,255,255,.45);
+  --line:rgba(255,255,255,.1); --grid:rgba(255,255,255,.08); --pill:#ffffff; --pill-ink:#000000; --accent:#2cc4ce;
+  --good:#3cc06a; --bad:#ef7373; --inc:#3987e5; --inc-2:#256abf; --inc-3:#184f95; --exp:#ffffff; --heat:57,135,229;
+  --c-housing:#3987e5; --c-groceries:#d95926; --c-kids:#199e70; --c-cafe:#c98500; --c-travel:#d55181; --c-hobby_s:#1a9a1a;
+  --c-hobby_m:#9085e9; --c-transport:#e66767; --c-fun:#86b6ef; --c-shopping:#f0a37a; --c-health:#5fd1a6; --c-other:#6b6a64;
+  --t-1:#3987e5; --t-2:#d95926; --t-3:#c98500; --t-4:#e66767; --t-5:#6b6a64; --shadow:none; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e0e0d; --surface:#1a1a19; --surface-2:#242422; --ink:#ffffff; --ink-2:rgba(255,255,255,.66); --muted:rgba(255,255,255,.45);
+  --line:rgba(255,255,255,.1); --grid:rgba(255,255,255,.08); --pill:#ffffff; --pill-ink:#000000; --accent:#2cc4ce;
+  --good:#3cc06a; --bad:#ef7373; --inc:#3987e5; --inc-2:#256abf; --inc-3:#184f95; --exp:#ffffff; --heat:57,135,229;
+  --c-housing:#3987e5; --c-groceries:#d95926; --c-kids:#199e70; --c-cafe:#c98500; --c-travel:#d55181; --c-hobby_s:#1a9a1a;
+  --c-hobby_m:#9085e9; --c-transport:#e66767; --c-fun:#86b6ef; --c-shopping:#f0a37a; --c-health:#5fd1a6; --c-other:#6b6a64;
+  --t-1:#3987e5; --t-2:#d95926; --t-3:#c98500; --t-4:#e66767; --t-5:#6b6a64; --shadow:none; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--f);font-size:15px;line-height:1.45;font-weight:500;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1200px;margin:0 auto;padding-inline:16px;padding-block:24px 64px;display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+h1,h2,h3{margin:0;font-weight:500;letter-spacing:-.035em;text-wrap:balance}
+h1{font-size:clamp(40px,7vw,84px);line-height:.95;text-align:center}
+h3{font-size:19px;letter-spacing:-.02em}
+.lead{color:var(--ink-2);text-align:center;font-size:16px;margin-top:8px}
+.sub{color:var(--ink-2);font-size:13px}
+.num{font-variant-numeric:tabular-nums}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+button{font-family:inherit}
+button:focus-visible,select:focus-visible,input:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.controls{display:grid;gap:10px;justify-items:center}
+.seg{display:flex;gap:4px;background:rgba(127,127,127,.14);border-radius:999px;padding:4px;overflow-x:auto;max-width:100%;scrollbar-width:none}
+.seg button{border:0;background:transparent;color:var(--ink);font-size:14px;padding:8px 14px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--surface);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.seg button:hover:not([aria-pressed="true"]){background:rgba(127,127,127,.12)}
+.seg.sm button{font-size:13px;padding:6px 12px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.tabs button{border:0;border-radius:999px;padding:10px 18px;font-size:15px;background:transparent;color:var(--ink);cursor:pointer;display:inline-flex;gap:8px;align-items:center}
+.tabs button[aria-selected="true"]{background:var(--pill);color:var(--pill-ink)}
+.tabs button:hover:not([aria-selected="true"]){background:rgba(127,127,127,.14)}
+.tabs .cnt{font-size:11px;background:var(--bad);color:#fff;border-radius:999px;padding:1px 7px}
+.card{background:var(--surface);border-radius:var(--r-card);padding:24px;min-width:0;box-shadow:var(--shadow)}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.g75{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:16px}
+.g2e{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.col{display:grid;gap:16px;align-content:start;min-width:0}
+.demo-note{background:color-mix(in srgb,var(--accent) 12%,var(--surface));border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);color:var(--ink);border-radius:18px;padding:12px 16px;font-size:14px;line-height:1.45;margin:4px 0 6px}
+.demo-note b{font-weight:600}
+.ac-tot{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:baseline;margin:2px 0 6px;font-size:13px;color:var(--ink-2)}
+.ac-tot b{font-size:22px;font-weight:600;color:var(--ink);letter-spacing:-.02em}
+.ac{border-top:1px solid var(--line);padding:14px 6px;border-radius:12px;cursor:pointer;display:grid;gap:10px}
+.ac:hover{background:var(--surface-2)}
+.ac-h{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center}
+.ac-h b{font-size:15px;font-weight:600}
+.ac-h small{display:block;font-size:12px;color:var(--muted)}
+.ac-h .bal{text-align:right;font-size:18px;font-weight:600;letter-spacing:-.02em;white-space:nowrap}
+.ac-h .bal small{font-weight:500;letter-spacing:0}
+.ac-flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.ac-flow div{background:var(--surface-2);border-radius:12px;padding:7px 9px;font-size:11.5px;color:var(--ink-2);line-height:1.25}
+.ac:hover .ac-flow div{background:var(--surface)}
+.ac-flow b{display:block;font-size:14px;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;margin-top:2px}
+.ac-flow .p b{color:var(--good)}.ac-flow .m b{color:var(--bad)}
+.ac-cats{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--ink-2)}
+.ac-cats span{display:inline-flex;align-items:center;gap:6px}
+.ac-cats b{color:var(--ink);font-weight:600}
+.ac-why{font-size:12.5px;color:var(--ink-2);background:var(--surface-2);border-radius:12px;padding:8px 10px}
+.ac:hover .ac-why{background:var(--surface)}
+@media (max-width:640px){.ac-flow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.panel{display:grid;gap:16px}
+.banner{background:var(--surface);border-radius:20px;padding:14px 18px;font-size:14px;text-align:center}
+.pnote{text-align:center;font-size:13px;color:var(--ink-2)}
+.total{cursor:pointer;transition:transform .15s}
+.total:hover{transform:translateY(-2px)}
+.total .lbl{font-size:14px;color:var(--ink-2);display:flex;align-items:center;gap:8px}
+.total .val{font-size:clamp(34px,4.6vw,56px);letter-spacing:-.04em;line-height:1;margin:14px 0 12px}
+.total.left .val{color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:5px 10px;border-radius:999px;background:var(--surface-2);color:var(--ink-2);border:0;font-family:inherit}
+.chip.up{color:var(--good)} .chip.down{color:var(--bad)}
+button.chip{cursor:pointer}
+.chart svg{display:block;width:100%;height:auto}
+.chart text{fill:var(--muted);font-family:var(--f);font-size:11px;font-weight:500}
+.chart .sel text.ml{fill:var(--ink);font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px;color:var(--ink-2)}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i.ln{width:16px;height:3px;border-radius:2px;display:inline-block}
+.attn ul{list-style:none;margin:0;padding:0}
+.attn li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:11px 0;border-top:1px solid var(--line);font-size:14px;cursor:pointer}
+.attn li:hover{background:var(--surface-2)}
+.excl-box{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);display:grid;gap:8px}
+.rank .gh{font-size:13px;font-weight:600;margin:14px 0 2px;display:flex;justify-content:space-between}
+.rank .gh span{color:var(--ink-2);font-weight:500}
+.rank .r{display:grid;grid-template-columns:minmax(0,210px) minmax(0,1fr) 96px 78px 112px;gap:12px;align-items:center;padding:9px 0;border-top:1px solid var(--line);font-size:14px;cursor:pointer}
+.rank .r:hover{background:var(--surface-2)}
+.rank .nm{display:flex;gap:8px;align-items:center;min-width:0}
+.rank .nm span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank .tr{height:12px;background:var(--surface-2);border-radius:6px;overflow:hidden}
+.rank .tr div{height:100%;border-radius:6px}
+.rank .v{text-align:right;font-weight:600}
+.rank .d{text-align:right}
+.rank svg{display:block;width:112px;height:26px}
+.donut-wrap{display:grid;place-items:center;position:relative;max-width:320px;margin:0 auto}
+.donut-wrap svg{width:100%;height:auto;display:block}
+.donut-center{position:absolute;inset:0;display:grid;place-content:center;text-align:center;pointer-events:none}
+.donut-center b{font-size:28px;letter-spacing:-.04em;font-weight:500}
+.seg-arc{cursor:pointer}
+.tmap{position:relative;width:100%;aspect-ratio:16/8;min-height:260px}
+.tmap div{position:absolute;border-radius:10px;padding:8px;overflow:hidden;cursor:pointer;color:#fff;font-size:12px;line-height:1.25;border:2px solid var(--surface)}
+.tmap b{display:block;font-size:15px;font-weight:600}
+.ldg{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px;font-size:12px;color:var(--ink-2)}
+.ldg span{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.bt{display:grid;font-size:14px}
+.bt .grp-h{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:baseline;padding:18px 0 8px;border-bottom:1px solid var(--ink)}
+.bt .grp-h:first-child{padding-top:4px}
+.bt .grp-h b{font-weight:600;font-size:15px;display:flex;align-items:center;gap:8px}
+.bt .grp-h span{color:var(--ink-2);font-size:13px}
+.bt .r{display:grid;grid-template-columns:22px minmax(0,1fr) 90px minmax(0,170px) 200px;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.bt .r:hover{background:var(--surface-2)}
+.bt .ic{display:grid;place-items:center;color:var(--ink-2)}
+.bt .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt .mo{color:var(--ink-2)}
+.bt .ct{display:flex;align-items:center;gap:6px;color:var(--ink-2);font-size:13px;min-width:0}
+.bt .ct span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bt .am{display:grid;grid-template-columns:minmax(0,1fr) 78px;gap:10px;align-items:center}
+.bt .am i{display:block;height:8px;border-radius:4px;min-width:3px}
+.bt .am b{text-align:right;font-weight:600}
+.bt .tot{display:grid;grid-template-columns:minmax(0,1fr) auto;padding:14px 0 0;font-weight:600}
+.bt.nomo .r{grid-template-columns:22px minmax(0,1fr) minmax(0,170px) 200px}.bt.nomo .mo{display:none}
+.bt.bycat .r{grid-template-columns:22px minmax(0,1fr) 90px 240px}.bt.bycat .ct{display:none}
+.bigctl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+.notes p{margin:0 0 10px;font-size:15px;line-height:1.5}
+.dec{display:grid;gap:8px;margin:0 0 12px;padding:0;list-style:none}
+.dec li{display:flex;gap:10px;align-items:flex-start;font-size:15px}
+.dec input{width:18px;height:18px;margin-top:2px;accent-color:var(--ink);flex:none}
+.dec li.done label{text-decoration:line-through;color:var(--muted)}
+form.add{display:flex;gap:8px;flex-wrap:wrap}
+form.add input{flex:1 1 220px;min-width:0;font:inherit;padding:12px 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink)}
+.btn{font:inherit;font-size:14px;border:0;border-radius:999px;padding:10px 18px;background:var(--pill);color:var(--pill-ink);cursor:pointer}
+.btn.g{background:var(--surface-2);color:var(--ink)}
+.btn.o{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn.sm{font-size:13px;padding:8px 14px}
+.empty{color:var(--muted);font-size:14px}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.tile .k{font-size:13px;color:var(--ink-2);display:flex;align-items:center;gap:10px}
+.ico{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:9px;background:color-mix(in srgb,var(--c) 15%,transparent);color:var(--c);flex:none;vertical-align:middle}
+.ico svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
+.ico.l{width:34px;height:34px;border-radius:11px}.ico.l svg{width:19px;height:19px}
+.ico.s{width:22px;height:22px;border-radius:7px}.ico.s svg{width:13px;height:13px}
+h3[data-ic]{display:flex;align-items:center;gap:10px}
+h3[data-ic]::before{content:"";width:20px;height:20px;flex:none;background:var(--ink-2);-webkit-mask:var(--m) center/20px no-repeat;mask:var(--m) center/20px no-repeat}
+.ys-mh b .ico{margin-right:8px}
+.grp .lab .ico{margin-right:8px}
+.ldg span,.ln,.ct,.rank .nm,#discuss li,.pp-items span,.xl .r span:first-child{align-items:center}
+.tile .v{font-size:clamp(26px,3.2vw,38px);letter-spacing:-.04em;line-height:1.05;margin-top:10px}
+.tile .s{font-size:12px;color:var(--muted);margin-top:6px}
+.mini-v{display:block;width:100%;height:58px;margin:12px 0 4px}
+.mini-v text{fill:var(--muted);font-size:9px;font-family:var(--f)}
+.mini-v text.on{fill:var(--ink);font-weight:600}
+.mini-stack{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;margin-top:8px}
+.mini-stack i{display:block;height:100%}
+.mini-lg{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:11px;color:var(--ink-2);margin-top:6px}
+.mini-lg span{display:inline-flex;align-items:center;gap:4px}
+.mini-lg .dot{width:7px;height:7px}
+.mini-share{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;margin-top:6px;font-size:11px;color:var(--ink-2)}
+.mini-share div{height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
+.mini-share i{display:block;height:100%;border-radius:3px}
+.tile{display:flex;flex-direction:column}
+.tile .s{margin-top:auto;padding-top:8px}
+.ppl{display:grid;gap:0}
+.pp-split{padding-bottom:14px;margin-bottom:4px}
+.pp-stack{display:flex;height:8px;border-radius:4px;overflow:hidden;gap:2px;margin:2px 0 6px}
+.pp-stack.big{height:12px;border-radius:6px}
+.pp-stack i{display:block;height:100%}
+.pp-row{border-top:1px solid var(--line);padding:12px 8px;border-radius:12px;cursor:pointer;display:grid;gap:8px}
+.pp-row:hover{background:var(--surface-2)}
+.pp-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.pp-n{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;flex-wrap:wrap}
+.pp-n small{font-weight:500;font-size:12px;color:var(--muted);width:100%;padding-left:36px}
+.pp-v{font-size:20px;letter-spacing:-.03em;text-align:right;white-space:nowrap}
+.pp-v small{display:block;font-size:11px;color:var(--ink-2);letter-spacing:0}
+.pp-b{display:grid;grid-template-columns:150px minmax(0,1fr);gap:14px;align-items:center}
+.pp-sp{display:block;width:150px;height:34px}
+.pp-items{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--ink-2)}
+.pp-items span{display:inline-flex;align-items:center;gap:5px}
+.pp-items b{color:var(--ink);font-weight:600}
+.pp-items .dot{width:7px;height:7px}
+@media (max-width:520px){.pp-b{grid-template-columns:1fr}.pp-sp{width:100%}}
+.toggles{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.tg{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:transparent;color:var(--ink-2);font-size:12px;padding:6px 11px;border-radius:999px;cursor:pointer}
+.tg[aria-pressed="true"]{background:var(--surface-2);color:var(--ink);border-color:transparent}
+.tg .sw{width:14px;height:3px;border-radius:2px;display:inline-block}
+.tg[aria-pressed="false"] .sw{opacity:.35}
+.heat-wrap{overflow-x:auto}
+.heat{border-collapse:separate;border-spacing:3px;width:100%;min-width:860px;font-size:12px}
+.heat th{font-weight:500;color:var(--muted);text-align:right;padding:2px 6px}
+.heat th:first-child{text-align:left}
+.heat th.sel{color:var(--ink);font-weight:600}
+.heat td{text-align:right;padding:8px 6px;border-radius:6px;white-space:nowrap;cursor:pointer}
+.heat td.sel{outline:2px solid var(--ink);outline-offset:-2px}
+.heat td.l{text-align:left;padding-left:0;cursor:pointer}
+.heat td.l span{display:flex;gap:6px;align-items:center}
+.heat td.l:hover{text-decoration:underline}
+.heat td.t{font-weight:600;cursor:default}
+.heat td.a{color:var(--ink-2);cursor:default}
+.heat tr.sum td{font-weight:600;border-top:1px solid var(--ink);cursor:default}
+
+.ppl .card{background:var(--surface-2);box-shadow:none;padding:18px;cursor:pointer}
+.ppl .v{font-size:22px;letter-spacing:-.03em;margin:6px 0;white-space:nowrap}
+.lanes-wrap{overflow-x:auto}
+.lanes{display:grid;grid-template-columns:160px repeat(var(--n),minmax(78px,1fr));min-width:880px;font-size:12px}
+.lanes .h{color:var(--muted);text-align:center;padding:0 0 8px;cursor:pointer}
+.lanes .h.sel{color:var(--ink);font-weight:600}
+.lanes .ln{padding:10px 8px 10px 0;border-top:1px solid var(--line);display:flex;gap:6px;align-items:flex-start;font-size:13px}
+.lanes .cell{border-top:1px solid var(--line);border-left:1px dashed var(--line);padding:6px 4px;display:grid;gap:4px;align-content:start}
+.lanes .cell.sel{background:var(--surface-2)}
+.blk{border-radius:10px;padding:5px 7px;background:var(--surface);border:1px solid var(--line);display:grid;line-height:1.2;cursor:pointer}
+.blk:hover{border-color:var(--ink)}
+.blk b{font-weight:600}
+.blk small{color:var(--ink-2);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.trip{display:grid;gap:14px;background:var(--surface-2);border-radius:22px;padding:18px;cursor:pointer;align-content:start}
+.trip:hover{outline:2px solid var(--line)}
+.trip .th{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:start}
+.trip .th b{display:block;font-size:17px;font-weight:600;letter-spacing:-.02em;line-height:1.2}
+.trip .th .am{font-size:20px;font-weight:600;letter-spacing:-.02em;text-align:right;white-space:nowrap}
+.trip .th .am small{display:block;font-size:11.5px;font-weight:500;color:var(--muted);letter-spacing:0}
+.trip .meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.trip .meta span{font-size:11.5px;color:var(--ink-2);background:var(--surface);border-radius:999px;padding:3px 9px;white-space:nowrap}
+.trip .br{display:grid;gap:9px}
+.trip .br-r{display:grid;grid-template-columns:22px minmax(0,1fr) auto 34px;gap:4px 9px;align-items:center;font-size:13px}
+.trip .br-r .nm{color:var(--ink)}
+.trip .br-r .v{font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.trip .br-r .pc{font-size:11.5px;color:var(--muted);text-align:right}
+.trip .br-r .tr{grid-column:2/5;height:5px;border-radius:3px;background:var(--surface);overflow:hidden;margin-top:-1px}
+.trip .br-r .tr i{display:block;height:100%;border-radius:3px}
+.trip .top{border-top:1px solid var(--line);padding-top:10px;display:grid;gap:5px;font-size:12px;color:var(--ink-2)}
+.trip .top div{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px}
+.trip .top div span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trip .top b{font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums}
+.trip .top .h{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.xl .r{display:grid;grid-template-columns:minmax(0,1fr) 110px 150px 110px;gap:12px;padding:10px 0;border-top:1px solid var(--line);font-size:14px;align-items:center}
+.xl .r .rs{color:var(--ink-2);font-size:13px}
+.xl .r b{text-align:right;font-weight:600}
+.rev .it{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;padding:16px 0;border-top:1px solid var(--line)}
+.rev .src{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--ink-2);background:var(--surface-2);border-radius:8px;padding:8px 10px;margin-top:8px;display:grid;gap:2px;overflow-wrap:anywhere}
+.rev .q{font-size:14px;margin-top:8px}
+.rev .acts{display:grid;gap:6px;justify-items:end;align-content:start;min-width:250px}
+.rev .acts .row{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.rev select,.rev input[type=text]{font:inherit;font-size:13px;padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface-2);color:var(--ink);max-width:100%}
+.rev input[type=text]{width:250px}
+.rev .ans{font-size:13px;color:var(--good);font-weight:600}
+.rev .it.done{opacity:.75}
+.rev .it.done .src{display:none}
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:20;display:grid;place-items:end center}
+.sheet{background:var(--surface);width:min(760px,100%);max-height:88vh;border-radius:28px 28px 0 0;padding:22px 20px calc(20px + env(safe-area-inset-bottom,0px));display:grid;grid-template-rows:auto auto minmax(0,1fr);gap:12px}
+@media (min-width:800px){.sheet-bg{place-items:center}.sheet{border-radius:28px;max-height:84vh}}
+.sheet.zoom{width:min(980px,100%)}
+.sheet .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.sheet .top h3{font-size:24px;letter-spacing:-.03em}
+.sheet .close{border:0;background:var(--surface-2);color:var(--ink);width:40px;height:40px;border-radius:50%;font-size:20px;cursor:pointer;flex:none}
+.sheet .scroll{overflow-y:auto;min-height:0}
+.grp{border-top:1px solid var(--line)}
+.grp > button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;width:100%;padding:12px 2px;cursor:pointer;font-size:15px;align-items:center}
+.grp > button:focus-visible{outline:2px solid var(--accent)}
+.grp .cnt{font-size:12px;color:var(--muted)}
+.grp .lab{overflow:hidden;text-overflow:ellipsis}
+.grp ul{list-style:none;margin:0 0 10px;padding:0 0 0 12px;display:grid;gap:4px}
+.grp li{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:10px;font-size:13px;color:var(--ink-2)}
+.neg{color:var(--good)}
+#zChart{overflow-x:auto}
+#zChart svg{min-width:560px}
+.hint{font-size:12px;color:var(--muted);margin-top:10px}
+#tip{position:fixed;pointer-events:none;background:var(--surface);color:var(--ink);font-size:13px;padding:14px 16px 12px;border-radius:18px;z-index:30;width:max-content;max-width:min(460px,calc(100vw - 16px));line-height:1.35;border:1px solid var(--line);box-shadow:0 22px 60px rgba(20,20,20,.18),0 2px 8px rgba(20,20,20,.06)}
+#tip .tt{font-weight:600;font-size:15px;letter-spacing:-.01em}
+#tip .tm{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline;margin-top:4px;color:var(--ink-2);font-size:12.5px}
+#tip .tm b{font-size:20px;font-weight:600;color:var(--ink);letter-spacing:-.02em}
+#tip .tm .dot{width:8px;height:8px;margin-right:4px}
+#tip .tsec{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+#tip .tops{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:2px 12px;margin-top:6px}
+#tip .tops>*{padding:5px 0;border-top:1px dashed var(--line)}
+#tip .tops>:nth-child(-n+3){border-top:0}
+#tip .tops .d{color:var(--muted);font-variant-numeric:tabular-nums;font-size:12px;padding-top:6px}
+#tip .tops .n{min-width:0}
+#tip .tops .n small{display:block;color:var(--muted);font-size:11.5px;margin-top:1px}
+#tip .tops .a{text-align:right;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+#tip .tkv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 16px;margin-top:8px}
+#tip .tkv span:nth-child(even){text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+#tip .tx{color:var(--ink-2);font-size:12.5px;margin-top:6px}
+#tip .tf{margin-top:12px;padding-top:9px;border-top:1px solid var(--line);color:var(--muted);font-size:11.5px}
+@media (max-width:980px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.trips{grid-template-columns:1fr 1fr}}
+@media (max-width:860px){.g75,.g2e{grid-template-columns:1fr}}
+@media (max-width:760px){.bt .r,.bt.bycat .r,.bt.nomo .r{grid-template-columns:20px minmax(0,1fr) auto;row-gap:2px}.bt .r .mo{grid-column:2;grid-row:2;font-size:12px}.bt .r .ct{display:none}.bt .r .am{grid-column:3;grid-row:1/3;grid-template-columns:auto}.bt .r .am i{display:none}
+  .rank .r{grid-template-columns:minmax(0,1fr) auto auto}.rank .tr,.rank svg{display:none}
+  .rev .it{grid-template-columns:1fr}.rev .acts{justify-items:start;min-width:0}.rev .acts .row{justify-content:flex-start}.rev input[type=text]{width:100%}
+  .xl .r{grid-template-columns:minmax(0,1fr) auto}.xl .r .rs,.xl .r .mo{display:none}}
+@media (max-width:640px){.grid3,.trips{grid-template-columns:1fr}.card{padding:18px}}
+.sheet.wide{width:min(980px,100%)}
+.ys-tools{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:6px}
+.ys-chart{overflow-x:auto}.ys-chart svg{display:block;width:100%;height:auto;min-width:560px}
+.ys-chart text{fill:var(--muted);font-size:11px;font-family:var(--f)}
+.ys-sec{margin-top:18px;scroll-margin-top:6px}
+.ys-mh{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:baseline;padding:8px 2px;position:sticky;top:0;background:var(--surface);z-index:1}
+.ys-mh b{font-size:17px;font-weight:600;letter-spacing:-.02em}
+.ys-mh .num{font-size:16px}
+.ys-mh .sub{font-size:12px}
+.grp .lab .dot{margin-right:7px;vertical-align:1px}
+.grp .mm{font-size:12px;color:var(--muted);margin-left:6px}
+.ys-more{all:unset;cursor:pointer;font-size:13px;color:var(--ink-2);padding:10px 2px;border-top:1px solid var(--line);display:block;width:100%}
+.ys-more:hover{color:var(--ink)}
+.ys-net{width:100%;border-collapse:collapse;font-size:14px}
+.ys-net th{font-size:12px;color:var(--muted);font-weight:500;text-align:right;padding:8px 6px}
+.ys-net th:first-child,.ys-net td:first-child{text-align:left}
+.ys-net td{padding:11px 6px;border-top:1px solid var(--line);text-align:right;vertical-align:top}
+.ys-net tr[data-ym]{cursor:pointer}
+.ys-net tr[data-ym]:hover td{background:var(--surface-2)}
+.ys-net td small{display:block;color:var(--muted);font-size:12px;margin-top:3px;text-align:left}
+.ys-act{display:flex;gap:8px;flex-wrap:wrap}
+.lnk{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;cursor:pointer;white-space:nowrap}
+.lnk:hover{background:var(--surface-2)}
+.tile[data-ys]{cursor:pointer}
+@media (max-width:640px){.ys-net .hm{display:none}}
+@media (prefers-reduced-motion:no-preference){
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes growY{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes growX{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeOut{from{opacity:1}to{opacity:0}}
+@keyframes draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+@keyframes pop{from{opacity:0;transform:scale(.86)}to{opacity:1;transform:none}}
+@keyframes sheetUp{from{opacity:0;transform:translateY(40px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes sheetDown{from{opacity:1;transform:none}to{opacity:0;transform:translateY(30px) scale(.98)}}
+@keyframes drop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.anim .card,.anim .grp,.anim .ys-sec,.anim .ys-net tr{animation:rise .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0)*45ms)}
+.anim svg rect:not([fill="transparent"]),.anim svg path:not([fill="none"]):not(.seg-arc){transform-box:fill-box;transform-origin:50% 100%;animation:growY .7s cubic-bezier(.2,.8,.2,1) both}
+.anim svg .grn{transform-origin:50% 0}
+.anim svg g[data-tip] rect{animation:pop .45s .55s both}
+.anim svg path.dr{stroke-dasharray:1;animation:draw 1.1s cubic-bezier(.4,0,.2,1) .15s both}
+.anim svg .seg-arc{transform-box:view-box;transform-origin:120px 120px;animation:pop .6s cubic-bezier(.2,.8,.2,1) both}
+.anim svg circle,.anim svg text,.anim svg line{animation:fadeIn .5s .3s both}
+.anim .mini-stack i,.anim .pp-stack i,.anim .mini-share i,.anim .rank .tr div,.anim .trip .tr i,.anim .bt .am i{transform-origin:0 50%;animation:growX .8s cubic-bezier(.2,.8,.2,1) .15s both}
+.anim .heat td{animation:fadeIn .6s .1s both}
+.anim .tmap>div{animation:pop .5s cubic-bezier(.2,.8,.2,1) both}
+.sheet-bg:not([hidden]){animation:fadeIn .22s both}
+.sheet-bg:not([hidden]) .sheet{animation:sheetUp .38s cubic-bezier(.2,.8,.2,1) both}
+.sheet-bg.out{animation:fadeOut .18s both}
+.sheet-bg.out .sheet{animation:sheetDown .18s ease-in both}
+.grp ul:not([hidden]){animation:drop .22s ease-out}
+#tip:not([hidden]){animation:fadeIn .12s}
+.card.tile,.pp-row,.trip,.total,.rank .r,.grp>button,.lnk,.seg button,.tabs button{transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s,background-color .2s,color .2s}
+.tile[data-ys]:hover,.trip:hover,.total:hover{transform:translateY(-3px);box-shadow:0 14px 34px rgba(0,0,0,.09)}
+.pp-row:hover{transform:translateX(3px)}
+.tile[data-ys]:active,.trip:active,.total:active{transform:translateY(-1px) scale(.99)}
+}
+@media (prefers-reduced-motion:reduce){.total{transition:none}}
+</style>
+
+<div class="wrap">
+  <header style="padding-block:18px 4px">
+    <h1>Семейные финансы</h1>
+    <p class="lead" id="lead">Бюджет семьи</p>
+  </header>
+
+  <div class="controls">
+    <div class="seg" id="monthSeg" role="group" aria-label="Месяц"></div>
+    <div class="seg sm" id="personSeg" role="group" aria-label="Чьи траты">
+      
+    </div>
+    <div class="tabs" role="tablist" aria-label="Разделы">
+      <button type="button" role="tab" data-tab="month" aria-selected="true">Месяц</button>
+      <button type="button" role="tab" data-tab="year" aria-selected="false">Год</button>
+      <button type="button" role="tab" data-tab="big" aria-selected="false">Крупное и поездки</button>
+      <button type="button" role="tab" data-tab="review" aria-selected="false">Проверка <span class="cnt" id="revCnt" hidden>0</span></button>
+    </div>
+  </div>
+  <div class="demo-note" id="demoNote" hidden><b>Это демо на вымышленной семье.</b> Чтобы увидеть свои финансы, напишите Claude: «Загрузи мои выписки в Семейные финансы» и приложите выписки всех счетов с начала года (CSV или XLSX). Демо исчезнет само, как только появятся ваши данные.</div>
+  <div class="banner" id="banner" hidden></div>
+  <div class="pnote" id="pnote" hidden></div>
+
+  <section class="panel" id="tab-month" role="tabpanel">
+    <div class="grid3">
+      <div class="card total" id="cardIn" role="button" tabindex="0"><div class="lbl"><span data-ico="inc"></span><span id="inLbl">Пришло</span></div><div class="val num" id="tIn">—</div><div class="chips" id="dIn"></div></div>
+      <div class="card total" id="cardOut" role="button" tabindex="0"><div class="lbl"><span data-ico="out"></span>Ушло</div><div class="val num" id="tOut">—</div><div class="chips" id="dOut"></div></div>
+      <div class="card total left" id="cardLeft" role="button" tabindex="0"><div class="lbl"><span data-ico="left"></span>Осталось</div><div class="val num" id="tLeft">—</div><div class="chips" id="dLeft"></div></div>
+    </div>
+    <div class="g75">
+      <div class="card">
+        <div class="card-head"><div><h3 data-ic="pace" id="paceTitle">Темп трат</h3><div class="sub">Накопленные траты по дням. Наведите на график — увидите сумму на любой день</div></div></div>
+        <div class="chart" id="pace"><p class="empty">Загружаю операции…</p></div>
+        <div class="legend" style="margin-top:8px"><span><i class="ln" style="background:var(--ink)"></i><span id="lgCur">этот месяц</span></span><span><i class="ln" style="background:var(--c-other)"></i><span id="lgPrev">прошлый месяц</span></span><span><i class="ln" style="background:repeating-linear-gradient(90deg,var(--muted) 0 5px,transparent 5px 9px)"></i>средний темп</span></div>
+      </div>
+      <div class="card attn">
+        <h3 data-ic="discuss">Обсудить на совете</h3><div class="sub" style="margin-bottom:6px">Гибкие траты, которые выросли сильнее всего к среднему</div>
+        <ul id="discuss"></ul>
+        <div class="excl-box" id="exclBox"></div>
+      </div>
+    </div>
+    <div class="card rank">
+      <div class="card-head"><div><h3 data-ic="pie" id="catTitle">Куда ушли деньги</h3><div class="sub" id="catSub"></div></div>
+        <div class="seg sm" id="catView" role="group" aria-label="Вид"><button type="button" data-v="bars" aria-pressed="true">Полосы</button><button type="button" data-v="donut" aria-pressed="false">Кольцо</button><button type="button" data-v="tree" aria-pressed="false">Treemap</button></div></div>
+      <div id="catBody"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><h3 data-ic="big" id="mbTitle">Крупное в месяце</h3><div class="sub">Поездки собраны в одну сумму. Наведите — увидите операции банка, нажмите — все траты категории</div></div></div>
+      <div class="bt nomo" id="monthBig"></div>
+    </div>
+    <div class="g2e">
+      <div class="card notes"><h3 data-ic="spark" style="margin-bottom:12px">Что заметил Claude</h3><div id="notes"></div></div>
+      <div class="card">
+        <h3 data-ic="check">Решили на совете</h3><div class="sub" style="margin:4px 0 14px">Договорённости на следующий месяц</div>
+        <ul class="dec" id="decisions"></ul>
+        <form class="add" id="addForm"><input id="addText" type="text" maxlength="200" placeholder="Например: по будням готовим дома" aria-label="Новое решение"><button class="btn" type="submit">Добавить</button></form>
+        <div class="sub" id="addMsg" style="margin-top:8px"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="tab-year" role="tabpanel" hidden>
+    <div class="tiles" id="tiles"></div>
+    <div class="card">
+      <div class="card-head"><div><h3 data-ic="trend">Как менялись доходы и расходы</h3><div class="sub">Над линиями — самая крупная трата месяца, весь список при наведении. Ниже — итог каждого месяца. Нажмите на месяц, чтобы открыть его</div></div>
+        <div class="ys-act"><button type="button" class="lnk" data-ys="net">Подробно по месяцам</button><div class="seg sm" id="lcMode" role="group" aria-label="Режим"><button type="button" data-mode="month" aria-pressed="true">По месяцам</button><button type="button" data-mode="cum" aria-pressed="false">С начала года</button></div></div></div>
+
+      <div class="chart" id="trend"></div>
+      <div class="legend" style="margin-top:8px"><span><i class="ln" style="background:var(--inc)"></i>Пришло</span><span><i class="ln" style="background:var(--exp)"></i>Ушло</span><span><i class="dot" style="background:var(--good);border-radius:3px"></i>месяц в плюсе</span><span><i class="dot" style="background:var(--bad);border-radius:3px"></i>месяц в минусе</span><span>✈ — поездка</span><span>цвет точки на метке — категория траты</span></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><h3 data-ic="grid">Траты по категориям и месяцам</h3><div class="sub">Чем темнее ячейка, тем больше обычного для этой категории. Нажмите на ячейку — откроются операции. Нажмите на категорию или задержите на ней курсор — откроется большой график</div></div></div>
+      <div class="heat-wrap"><table class="heat num" id="heat"></table></div>
+    </div>
+    <div class="g2e">
+      <div class="col">
+      <div class="card">
+        <div class="card-head"><div><h3 data-ic="inc">Откуда приходили деньги</h3><div class="sub">Доходы по источникам · <button type="button" class="lnk" data-ys="inc" style="padding:3px 10px;font-size:12px">все поступления</button></div></div>
+          <div class="legend" id="incLegend"></div></div>
+        <div class="chart" id="incChart"></div>
+      </div>
+      <div class="card" id="acctCard">
+        <div class="card-head"><div><h3 data-ic="bank">Счета: сколько было и куда ушло</h3><div class="sub">Остаток на конец месяца по выпискам. Ниже по каждому счёту: откуда пришло, на что потратили и сколько докладывали с других счетов. Нажмите на счёт — все его траты</div></div></div>
+        <div class="chart" id="acctChart"></div>
+        <div id="acctLegend" class="legend" style="margin-top:6px"></div>
+        <div id="acctList"></div>
+      </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><h3 data-ic="common">Чьи траты</h3><div class="sub">За год: сумма, траты по месяцам и главное. Нажмите на строку — откроются все траты по месяцам</div></div></div>
+        <div class="ppl" id="ppl"></div>
+        <div id="pplBar" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="tab-big" role="tabpanel" hidden>
+    <div class="card">
+      <div class="card-head"><div><h3 data-ic="big">Крупное и поездки по месяцам</h3><div class="sub">Строка — тип события, столбец — месяц. Чем крупнее цифра, тем дороже. Наведите — увидите операции банка, нажмите — все траты категории за месяц</div></div></div>
+      <div class="lanes-wrap" id="lanes"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><h3 data-ic="travel">Поездки</h3><div class="sub">Каждая поездка — сумма всех трат в эти даты: билеты, жильё, еда, транспорт, покупки. Цвет и подпись — в какую категорию поездка входит. Нажмите — откроются все операции</div></div><div class="sub num" id="tripTot"></div></div>
+      <div class="trips" id="trips"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div><h3 data-ic="list">Все крупные траты списком</h3><div class="sub" id="bigSub">Самые крупные траты, без аренды, продуктов и других регулярных платежей</div></div></div>
+      <div class="bigctl">
+        <div class="seg sm" id="bgGroup" role="group" aria-label="Группировка"><button type="button" data-g="cat" aria-pressed="true">По категориям</button><button type="button" data-g="month" aria-pressed="false">По месяцам</button><button type="button" data-g="amount" aria-pressed="false">По сумме</button></div>
+        <div class="seg sm" id="bgType" role="group" aria-label="Тип"><button type="button" data-t="all" aria-pressed="true">Всё</button><button type="button" data-t="trip" aria-pressed="false">Поездки</button><button type="button" data-t="big" aria-pressed="false">Крупные траты</button></div>
+      </div>
+      <div class="bt" id="bigList"></div>
+    </div>
+    <div class="card xl" id="xlCard">
+      <div class="card-head"><div><h3 data-ic="xl">Не в бюджете</h3><div class="sub" id="xlSub">Траты, которые не относятся к семейному бюджету: работа, проекты, компенсируемые расходы. Видны здесь, но не входят в итоги, средние и тренды</div></div><div class="sub num" id="xlTot"></div></div>
+      <div id="xlList"></div>
+    </div>
+  </section>
+
+  <section class="panel" id="tab-review" role="tabpanel" hidden>
+    <div class="card rev">
+      <div class="card-head"><div><h3 data-ic="review">Проверка разметки</h3><div class="sub" id="revSub">Ответьте на вопросы — Claude применит решения как правила при следующем разборе</div></div>
+        <div class="seg sm" id="revFilter" role="group" aria-label="Фильтр"><button type="button" data-f="open" aria-pressed="true">Ждут ответа</button><button type="button" data-f="done" aria-pressed="false">Отвечено</button><button type="button" data-f="all" aria-pressed="false">Все</button></div></div>
+      <div id="revList"></div>
+    </div>
+  </section>
+</div>
+
+<div class="sheet-bg" id="sheetBg" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="shTitle">
+    <div class="top"><div><h3 id="shTitle">—</h3><div class="sub" id="shSub"></div></div><button class="close" id="shClose" aria-label="Закрыть">×</button></div>
+    <div class="chips" id="shChips"></div>
+    <div class="scroll" id="shBody"></div>
+  </div>
+</div>
+<div class="sheet-bg" id="zoomBg" hidden>
+  <div class="sheet zoom" role="dialog" aria-modal="true" aria-labelledby="zTitle">
+    <div class="top"><div><h3 id="zTitle">—</h3><div class="sub" id="zSub"></div></div><button class="close" id="zClose" aria-label="Закрыть">×</button></div>
+    <div class="chips" id="zChips"></div>
+    <div class="scroll"><div class="chart" id="zChart"></div><div class="hint">Наведите на столбик — увидите траты месяца. Нажмите — откроются все операции</div></div>
+  </div>
+</div>
+<div id="tip" hidden></div>
+
+<script>
+(function(){
+const CATS=[
+ {id:"housing",name:"Жильё и коммуналка"},{id:"kids",name:"Дети: школа и занятия"},{id:"groceries",name:"Продукты"},
+ {id:"travel",name:"Поездки"},{id:"hobby_s",name:"Хобби взрослого 1"},{id:"hobby_m",name:"Хобби взрослого 2"},
+ {id:"transport",name:"Машины и транспорт"},{id:"cafe",name:"Кафе и рестораны"},{id:"fun",name:"Спорт и досуг семьи"},
+ {id:"shopping",name:"Покупки и одежда"},{id:"health",name:"Здоровье и красота"},{id:"other",name:"Прочее: кредит, связь, наличные"}];
+const CAT=Object.fromEntries(CATS.map(c=>[c.id,c]));
+const FIXED=new Set(["housing","kids","other"]);
+const PERSONS={all:{name:"Вся семья",cats:null},a1:{name:"Взрослый 1",cats:["hobby_s"],c:"hobby_s",desc:""},a2:{name:"Взрослый 2",cats:["hobby_m"],c:"hobby_m",desc:""},kids:{name:"Дети",cats:["kids"],c:"kids",desc:"школы, лагеря, кружки, карманные"},common:{name:"Общее",cats:CATS.map(c=>c.id).filter(id=>!["hobby_s","hobby_m","kids"].includes(id)),c:"housing",desc:"дом, еда, машины, поездки, досуг"}};
+const col=id=>`var(--c-${id})`;
+const MN=["Январь","Февраль","Март","Апрель","Май","Июнь","Июль","Август","Сентябрь","Октябрь","Ноябрь","Декабрь"];
+const MS=["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"];
+const MP=["январе","феврале","марте","апреле","мае","июне","июле","августе","сентябре","октябре","ноябре","декабре"];
+let CUR="EUR", CSYM="€";
+let eur=new Intl.NumberFormat("ru-RU",{style:"currency",currency:CUR,maximumFractionDigits:0});
+let eur2=new Intl.NumberFormat("ru-RU",{style:"currency",currency:CUR,minimumFractionDigits:2,maximumFractionDigits:2});
+const k=v=>Math.abs(v)>=1e6?(v/1e6).toLocaleString("ru-RU",{maximumFractionDigits:1})+" млн "+CSYM:Math.abs(v)>=1000?(v/1000).toLocaleString("ru-RU",{maximumFractionDigits:1})+" тыс. "+CSYM:Math.round(v)+" "+CSYM;
+const ks_=v=>Math.abs(v)>=1000?(v/1000).toLocaleString("ru-RU",{maximumFractionDigits:1})+" тыс.":String(Math.round(v));
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const mi=key=>+key.split("-")[1]-1;
+const mLabel=key=>MN[mi(key)]+" "+key.slice(0,4);
+const sum=a=>(a||[]).reduce((s,x)=>s+(+x.amount||0),0);
+const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
+const plural=(n,a,b,c)=>{const m=n%10,h=n%100;return m===1&&h!==11?a:(m>=2&&m<=4&&(h<12||h>14)?b:c);};
+const store={get(k2,d){try{return localStorage.getItem(k2)??d;}catch(e){return d;}},set(k2,v){try{localStorage.setItem(k2,v);}catch(e){}}};
+
+let S={months:{},decisions:[],review:[],accounts:null}, CFG={}, cur=null, db=null, canWrite=true, person="all", tab=store.get("ss.tab","month");
+if(!["month","year","big","review"].includes(tab)) tab="month";
+const txCache={};
+const keys=()=>Object.keys(S.months).sort();
+const visCats=()=>PERSONS[person].cats?CATS.filter(c=>PERSONS[person].cats.includes(c.id)):CATS;
+const isVis=id=>!PERSONS[person].cats||PERSONS[person].cats.includes(id);
+const catAmt=(key,id)=>+((S.months[key]?.expenses||[]).find(e=>e.cat===id)?.amount||0);
+const inc=key=>sum(S.months[key]?.income);
+const out=key=>visCats().reduce((s,c)=>s+catAmt(key,c.id),0);
+const before=key=>keys().filter(x=>x<key);
+const evCat=e=>e.type==="trip"?(e.cat||"travel"):(e.cat||"other");
+const events=key=>(S.months[key]?.events||[]).filter(e=>isVis(evCat(e)));
+
+function chip(now,ref,label,goodUp){
+  if(ref==null||!ref) return "";
+  const p=Math.round((now-ref)/Math.abs(ref)*100);
+  if(p===0) return `<span class="chip">${label}: так же</span>`;
+  const good=(p>0)===goodUp;
+  return `<span class="chip ${good?"up":"down"}">${p>0?"▲":"▼"} ${Math.abs(p)}% ${label}</span>`;
+}
+function evTip(e,x){
+  let t=`${e.title}\n${eur.format(e.amount)} · ${CAT[evCat(e)]?.name||""}${e.dates?" · "+e.dates:""}${x?" · "+MN[mi(x)].toLowerCase():""}`;
+  if(e.details?.length) t+="\n\n"+e.details.map(d=>"• "+d).join("\n");
+  return t+"\n\nЕсли что-то не так — напишите Claude, куда перенести.";
+}
+function monthCatTip(x,id){
+  const m=S.months[x], v=catAmt(x,id), a=avg(before(x).map(p=>catAmt(p,id)));
+  const items=((m.expenses||[]).find(e=>e.cat===id)?.items||[]).slice(0,5);
+  let t=`${mLabel(x)} · ${CAT[id].name}\n${eur.format(v)}`;
+  if(a) t+=` (${v>=a?"+":"−"}${Math.abs(Math.round((v-a)/a*100))}% к среднему)`;
+  if(items.length) t+="\n\nГлавное:\n"+items.map(i=>"• "+i.label+" — "+eur.format(i.amount)).join("\n");
+  return t;
+}
+function niceStep(x){const p=Math.pow(10,Math.floor(Math.log10(x||1)));const f=x/p;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p;}
+function axis(top,step,W,pl,pr,y,bot=0){let s="";for(let v=bot;v<=top+.1;v+=step){s+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="${v===0?"var(--muted)":"var(--grid)"}"${v===0&&bot<0?' stroke-dasharray="2 3"':""}/><text x="${pl-8}" y="${y(v)+4}" text-anchor="end">${v===0?"0":(v<0?"−":"")+(Math.abs(v)>=1000?(Math.abs(v)/1000).toLocaleString("ru-RU")+" тыс":Math.abs(v))}</text>`;}return s;}
+const bar=(x,yTop,y0,w,fill,extra="")=>{const h=Math.max(0,y0-yTop), r=Math.min(4,h); return `<path ${extra} d="M${x},${y0} V${yTop+r} Q${x},${yTop} ${x+r},${yTop} H${x+w-r} Q${x+w},${yTop} ${x+w},${yTop+r} V${y0} Z" fill="${fill}"/>`;};
+
+/* infographic icons (24px line icons) */
+const IC={
+ housing:'<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
+ kids:'<path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11.2V16c3 2.6 9 2.6 12 0v-4.8"/><path d="M22 9v6"/>',
+ groceries:'<path d="M3 4h2.2l2.3 11h11l2-8H6.3"/><circle cx="9" cy="19.5" r="1.4"/><circle cx="17.5" cy="19.5" r="1.4"/>',
+ travel:'<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>',
+ hobby_s:'<path d="M3 20 9.5 9l4 6.5 2.5-3.5L21 20z"/><circle cx="17" cy="6" r="2"/>',
+ hobby_m:'<path d="M12 3l2.1 5.6L20 11l-5.9 2.2L12 19l-2.1-5.8L4 11l5.9-2.4z"/><path d="M19 3v3M17.5 4.5h3"/>',
+ transport:'<path d="M5 17H4a1 1 0 0 1-1-1v-3.5L5.5 7h13L21 12.5V16a1 1 0 0 1-1 1h-1"/><path d="M3.5 12.5h17"/><circle cx="7.5" cy="17" r="2"/><circle cx="16.5" cy="17" r="2"/><path d="M9.5 17h5"/>',
+ cafe:'<path d="M4 8h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M17 9.5h1.3a2.6 2.6 0 0 1 0 5.2H17"/><path d="M8 2.5v2.5M12 2.5v2.5"/><path d="M3 21h15"/>',
+ fun:'<circle cx="12" cy="12" r="9"/><path d="M12 3c2.5 2.6 3.7 5.6 3.7 9s-1.2 6.4-3.7 9M12 3C9.5 5.6 8.3 8.6 8.3 12s1.2 6.4 3.7 9M3.5 9h17M3.5 15h17"/>',
+ shopping:'<path d="M5 8h14l-1.2 12.1a1 1 0 0 1-1 .9H7.2a1 1 0 0 1-1-.9z"/><path d="M9 10V6a3 3 0 0 1 6 0v4"/>',
+ health:'<path d="M12 20.5S3.5 15.6 3.5 9.3A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 8.5 2.3c0 6.3-8.5 11.2-8.5 11.2z"/><path d="M8 12h2.5l1.2-2 1.6 4 1.2-2H16"/>',
+ other:'<rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><path d="M17 13.5v7M13.5 17h7"/>',
+ inc:'<path d="M12 3v11"/><path d="M7.5 9.5 12 14l4.5-4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
+ out:'<path d="M12 14V3"/><path d="M7.5 7.5 12 3l4.5 4.5"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
+ left:'<path d="M19 7V5.5A1.5 1.5 0 0 0 17.5 4H5a2 2 0 0 0 0 4h14a1 1 0 0 1 1 1v3h-3.5a2 2 0 0 0 0 4H20v3a1 1 0 0 1-1 1H5a2 2 0 0 1-2-2V6"/>',
+ net:'<path d="M12 3v18M6 21h12M4 7h16"/><path d="M7 7l-3 6.5a3.2 3.2 0 0 0 6 0zM17 7l-3 6.5a3.2 3.2 0 0 0 6 0z"/>',
+ xl:'<rect x="3" y="7.5" width="18" height="12.5" rx="2"/><path d="M9 7.5V5.5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 5.5v2M3 13h18"/>',
+ p_a1:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+ p_a2:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+ p_kids:'<circle cx="8" cy="9" r="3"/><circle cx="16.5" cy="10" r="2.5"/><path d="M3 20a5 5 0 0 1 10 0M13 20a3.7 3.7 0 0 1 7.5 0"/>',
+ p_common:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M15.5 4.8a3.5 3.5 0 0 1 0 6.4M18 14a6.5 6.5 0 0 1 3.5 6"/>',
+ pace:'<path d="M3 20h18"/><path d="M4 16l5-5 4 3 7-8"/><path d="M15 6h5v5"/>',
+ discuss:'<path d="M4 5h16v10H9l-5 4z"/><path d="M8.5 9.5h7M8.5 12h4"/>',
+ pie:'<path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/>',
+ big:'<path d="M6 3h12l3 5.5L12 21 3 8.5z"/><path d="M3 8.5h18M9 3l3 18 3-18"/>',
+ spark:'<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15v4M17 17h4M5 3.5v3M3.5 5h3"/>',
+ check:'<circle cx="12" cy="12" r="9"/><path d="M8 12.3l2.7 2.7L16.3 9.3"/>',
+ trend:'<path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 6-7"/>',
+ grid:'<rect x="3.5" y="3.5" width="17" height="17" rx="2"/><path d="M3.5 9.2h17M3.5 14.8h17M9.2 3.5v17M14.8 3.5v17"/>',
+ list:'<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/>',
+ review:'<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 12.5l2 2 4-4"/>',
+ common:'<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M15.5 4.8a3.5 3.5 0 0 1 0 6.4M18 14a6.5 6.5 0 0 1 3.5 6"/>'
+};
+const ICC={inc:"var(--inc)",out:"var(--exp)",left:"var(--accent)",net:"var(--accent)",xl:"var(--ink-2)",p_a1:"var(--c-hobby_s)",p_a2:"var(--c-hobby_m)",p_kids:"var(--c-kids)",p_common:"var(--ink-2)"};
+function ico(id,size){const k2=IC[id]?id:"other"; const c=ICC[id]||(CAT[id]?col(id):"var(--ink-2)"); return `<span class="ico${size?" "+size:""}" style="--c:${c}" aria-hidden="true"><svg viewBox="0 0 24 24">${IC[k2]}</svg></span>`;}
+const icURL=id=>`url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>${IC[id]||IC.other}</svg>`)}")`;
+function setIc(el,id){ if(!el) return; if(id&&IC[id]){ el.dataset.ic=id; el.style.setProperty("--m",icURL(id)); } else { delete el.dataset.ic; } }
+document.querySelectorAll("h3[data-ic]").forEach(h=>setIc(h,h.dataset.ic));
+document.querySelectorAll("[data-ico]").forEach(sp=>{sp.outerHTML=ico(sp.dataset.ico,"s");});
+
+const BRI={"Билеты":"b_tix","Жильё":"b_bed","Еда":"b_food","Транспорт":"b_taxi","Покупки и прочее":"b_bag"};
+Object.assign(IC,{
+ b_tix:'<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>',
+ b_bed:'<path d="M3 19V6M3 15h18v4M21 15v-3a3 3 0 0 0-3-3h-7v6"/><circle cx="7" cy="11" r="2"/>',
+ b_food:'<path d="M5 3v8a2 2 0 0 0 2 2v8M9 3v8a2 2 0 0 1-2 2M7 3v6"/><path d="M17 21V3c-2.2 1.2-3.5 3.6-3.5 7v3H17"/>',
+ b_taxi:'<path d="M5 17H4a1 1 0 0 1-1-1v-3.5L5.5 7h13L21 12.5V16a1 1 0 0 1-1 1h-1"/><circle cx="7.5" cy="17" r="2"/><circle cx="16.5" cy="17" r="2"/><path d="M9.5 17h5M10 4h4v3"/>',
+ b_bag:'<path d="M5 8h14l-1.2 12.1a1 1 0 0 1-1 .9H7.2a1 1 0 0 1-1-.9z"/><path d="M9 10V6a3 3 0 0 1 6 0v4"/>'});
+function tripDays(d){const m=String(d||"").match(/(\d\d)\.(\d\d)\s*[–-]\s*(\d\d)\.(\d\d)/); if(!m) return 0; const a=new Date(2026,+m[2]-1,+m[1]), b=new Date(2026,+m[4]-1,+m[3]); return Math.round((b-a)/864e5)+1;}
+function tripCard(t,KC){
+  const br=Object.entries(t.br||{}).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]); const S=br.reduce((a,[,v])=>a+v,0)||1, c=evCat(t), days=tripDays(t.dates);
+  const ops=((t.details||[])[0]||"").match(/^(\d+) операц/); 
+  const top=(t.details||[]).slice(1).map(l=>l.match(/^(.*?) — ([\d.]+) \S{1,4}(?: \((\d+) оп\.\))?$/)).filter(Boolean).slice(0,3);
+  const meta=[MN[mi(t.x)], t.dates||"", days?days+" "+plural(days,"день","дня","дней"):"", ops?ops[1]+" "+plural(+ops[1],"операция","операции","операций"):""].filter(Boolean);
+  return `<div class="trip" role="button" tabindex="0" data-bm="${t.x}" data-bc="${c}" data-tip="${esc(evTip(t,t.x))}">
+  <div class="th">${ico(c,"l")}<div><b>${esc(shortTitle(t))}</b><div class="sub" style="font-size:12.5px;margin-top:2px">${esc(CAT[c].name)}</div></div><div class="am num">${eur.format(t.amount)}${days?`<small>${eur.format(t.amount/days)} в день</small>`:""}</div></div>
+  <div class="meta">${meta.map(m=>`<span>${esc(m)}</span>`).join("")}</div>
+  <div class="br">${br.map(([n,v],i)=>`<div class="br-r">${ico(BRI[n]||"b_bag","s").replace('style="--c:var(--ink-2)"',`style="--c:${KC[n]||"var(--t-5)"}"`)}<span class="nm">${esc(n)}</span><span class="v">${eur.format(v)}</span><span class="pc">${Math.round(v/S*100)}%</span><span class="tr"><i style="width:${Math.max(2,v/br[0][1]*100)}%;background:${KC[n]||"var(--t-5)"}"></i></span></div>`).join("")}</div>
+  ${top.length?`<div class="top"><div class="h"><span>Главное</span></div>${top.map(m=>`<div><span>${esc(m[1])}${m[3]?` · ${m[3]} опер.`:""}</span><b>${eur.format(+m[2])}</b></div>`).join("")}</div>`:""}
+  </div>`;
+}
+
+const MG=["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+const APAL=["var(--t-1)","var(--t-3)","var(--t-4)","var(--t-2)","var(--t-5)","var(--c-health)","var(--c-hobby_m)"];
+const acol=id=>{const A=S.accounts?.accounts||[]; const a=A.find(x=>x.id===id); if(a?.color) return a.color; if(a?.offStatement) return "var(--muted)"; const i=A.filter(x=>!x.offStatement).findIndex(x=>x.id===id); return APAL[(i<0?0:i)%APAL.length];};
+const opened=a=>{const ks=Object.keys(a.months).sort(); return ks.find(x=>{const m=a.months[x]; return (m.start||0)!==0||(m.end||0)!==0||m.inc||m.exp||m.tin||m.tout;})||ks[0];};
+IC.bank='<path d="M3 10h18L12 4z"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20.5h18"/>';
+function renderAccounts(){
+  const card=$("acctCard"); if(!card) return; setIc(card.querySelector("h3"),"bank"); const A=S.accounts?.accounts; if(!A){ card.hidden=true; return; } card.hidden=false;
+  const ks=keys().filter(x=>A[0].months[x]); const sum=(a,f)=>ks.reduce((t,x)=>t+(+((a.months[x]||{})[f])||0),0);
+  const bankA=A.filter(a=>!a.offStatement&&a.months[ks[0]]&&a.months[ks[ks.length-1]].end!=null);
+  // balance chart
+  const W=520,H=200,pl=50,pr=10,pt=14,pb=28, n=ks.length, gw=(W-pl-pr)/n, X=i=>pl+gw*i+gw/2;
+  const tot=ks.map(x=>bankA.reduce((t,a)=>t+(a.months[x].end||0),0)), st0=bankA.reduce((t,a)=>t+(a.months[ks[0]].start||0),0);
+  const mx=Math.max(1,st0,...tot), step=niceStep(mx/4), top=Math.ceil(mx/step)*step, y=v=>pt+(H-pt-pb)*(1-v/top);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Остатки на счетах">`+axis(top,step,W,pl,pr,y);
+  const line=(vals,c,w,dash)=>`<path class="dr" pathLength="1" d="${vals.map((v,i)=>(i?"L":"M")+X(i)+","+y(v)).join(" ")}" fill="none" stroke="${c}" stroke-width="${w}" ${dash?'stroke-dasharray="4 4"':''} stroke-linejoin="round" stroke-linecap="round"/>`+vals.map((v,i)=>`<circle cx="${X(i)}" cy="${y(v)}" r="${ks[i]===cur?4.5:3}" fill="${c}" stroke="var(--surface)" stroke-width="1.5"/>`).join("");
+  s+=`<path d="${tot.map((v,i)=>(i?"L":"M")+X(i)+","+y(v)).join(" ")} L${X(n-1)},${y(0)} L${X(0)},${y(0)} Z" fill="var(--ink)" opacity=".05"/>`;
+  s+=line(tot,"var(--ink-2)",1.6,true);
+  bankA.forEach(a=>{s+=line(ks.map(x=>a.months[x].end||0),acol(a.id),2.4);});
+  ks.forEach((x,i)=>{s+=`<g class="${x===cur?"sel":""}"><text class="ml" x="${X(i)}" y="${H-8}" text-anchor="middle">${MS[mi(x)]}</text></g>`;
+    const t=`${MN[mi(x)]} — остатки на конец месяца\n`+bankA.map(a=>`${a.name}: ${eur.format(a.months[x].end||0)}`).join("\n")+`\nВсего: ${eur.format(tot[i])}`;
+    s+=`<rect x="${pl+gw*i}" y="0" width="${gw}" height="${H}" fill="transparent" data-tip="${esc(t)}"/>`;});
+  $("acctChart").innerHTML=`<div class="ac-tot"><span>На всех счетах 1 января</span><b class="num">${eur.format(st0)}</b><span>→ на конец ${MG[mi(ks[n-1])]}</span><b class="num">${eur.format(tot[n-1])}</b></div>`+s+"</svg>";
+  $("acctLegend").innerHTML=bankA.map(a=>`<span><i class="ln" style="background:${acol(a.id)}"></i>${esc(a.name)}</span>`).join("")+`<span><i class="ln" style="background:repeating-linear-gradient(90deg,var(--ink-2) 0 4px,transparent 4px 8px)"></i>всего</span>`;
+  // rows
+  const rows=A.filter(a=>sum(a,"exp")>50||sum(a,"inc")>50).map(a=>{
+    const inc=sum(a,"inc"), exp=sum(a,"exp"), tin=sum(a,"tin"), tout=sum(a,"tout"), xl=sum(a,"xl");
+    const cats={}; ks.forEach(x=>Object.entries(a.months[x].cats||{}).forEach(([c,v])=>cats[c]=(cats[c]||0)+v));
+    const tc=Object.entries(cats).sort((p,q)=>q[1]-p[1]).slice(0,4);
+    const st=a.months[ks[0]].start, en=a.months[ks[n-1]].end, hasBal=en!=null;
+    let why="";
+    if(a.offStatement) why="Покупки машин, оплаченные не с этих счетов. Деньги на них записаны и в приход, и в расход.";
+    else{
+      const parts=[];
+      if(exp>inc+0.5) parts.push(`траты (${k(exp)}) больше поступлений извне (${k(inc)}) на ${k(exp-inc)}`);
+      else parts.push(`поступления извне (${k(inc)}) покрыли траты (${k(exp)})`);
+      if(tin>1) parts.push(`докладывали со своих счетов ${k(tin)}`);
+      if(tout>1) parts.push(`перевели на другие свои счета ${k(tout)}`);
+      if(hasBal&&st!=null&&Math.abs(en-st)>1) parts.push(`остаток ${en<st?"уменьшился":"вырос"} на ${k(Math.abs(en-st))}`);
+      if(Math.abs(xl)>1) parts.push(`«не в бюджете»: ${xl>0?"+":"−"}${k(Math.abs(xl))}`);
+      const ks2=ks.filter(x=>x>=opened(a)); const low=hasBal?ks2.reduce((m,x)=>a.months[x].end<a.months[m].end?x:m,ks2[0]):null;
+      why=parts.join(", ")+"."+(low&&a.months[low].end<500?` Минимум — ${eur.format(a.months[low].end)} в конце ${MG[mi(low)]}.`:"");
+      why=why[0].toUpperCase()+why.slice(1);
+    }
+    return `<div class="ac" data-ys="acc:${a.id}" role="button" tabindex="0" aria-label="${esc(a.name)} — все траты">
+      <div class="ac-h">${ico("bank","").replace('--c:var(--ink-2)','--c:'+acol(a.id))}<div><b>${esc(a.name)}</b><small>${a.owner?esc(a.owner)+" · ":""}${!a.offStatement&&opened(a)!==ks[0]?`открыт в ${MP[mi(opened(a))]} · `:""}${hasBal?`было ${eur.format(st||0)} на 1 ${MG[mi(opened(a))]}`:"без остатка"}</small></div>${hasBal?`<div class="bal num">${eur.format(en)}<small>сейчас</small></div>`:""}</div>
+      <div class="ac-flow"><div class="p">Пришло извне<b>+${k(inc)}</b></div><div class="p"${tin<1?' style="opacity:.45"':""}>Со своих счетов<b>${tin<1?"0 "+CSYM:"+"+k(tin)}</b></div><div class="m">Траты<b>−${k(exp)}</b></div><div class="m"${tout<1?' style="opacity:.45"':""}>На свои счета<b>${tout<1?"0 "+CSYM:"−"+k(tout)}</b></div></div>
+      ${tc.length?`<div class="ac-cats">${tc.map(([c,v])=>`<span>${ico(c,"s")}${esc((CAT[c]?.name||c).split(":")[0])} <b class="num">${k(v)}</b></span>`).join("")}</div>`:""}
+      <div class="ac-why">${esc(why)}</div></div>`;}).join("");
+  $("acctList").innerHTML=rows;
+}
+
+/* ===== Family config (doc config/main) ===== */
+const INC_C=["var(--inc)","var(--inc-2)","var(--inc-3)","var(--c-health)","var(--c-other)"];
+const INC_G=()=>{const g=(CFG.incomeGroups||[]).slice(0,4); return g.concat(["Прочее"]);};
+const incGroup=g=>(CFG.incomeGroups||[]).slice(0,4).includes(g)?g:"Прочее";
+const BASE_NAMES={a1:PERSONS.a1.name,a2:PERSONS.a2.name,kids:PERSONS.kids.name,kidsDesc:PERSONS.kids.desc,cats:Object.fromEntries(CATS.map(c=>[c.id,c.name]))};
+const CUR_LABEL=()=>{try{return CFG.currencyLabel||new Intl.DisplayNames("ru",{type:"currency"}).of(CUR)||CUR;}catch(e){return CUR;}};
+function applyConfig(c){
+  CFG=c||{};
+  { const t=CFG.title||"Семейные финансы"; document.title=t; const h=document.querySelector("header h1"); if(h) h.textContent=t; }
+  PERSONS.a1.name=BASE_NAMES.a1; PERSONS.a2.name=BASE_NAMES.a2; PERSONS.kids.name=BASE_NAMES.kids; PERSONS.kids.desc=BASE_NAMES.kidsDesc; PERSONS.a1.desc=""; PERSONS.a2.desc="";
+  CATS.forEach(x=>x.name=BASE_NAMES.cats[x.id]);
+  CUR=CFG.currency||"EUR";
+  try{ CSYM=CFG.currencySymbol||(new Intl.NumberFormat("ru-RU",{style:"currency",currency:CUR}).formatToParts(0).find(p=>p.type==="currency")||{}).value||CUR;
+    eur=new Intl.NumberFormat("ru-RU",{style:"currency",currency:CUR,maximumFractionDigits:0}); eur2=new Intl.NumberFormat("ru-RU",{style:"currency",currency:CUR,minimumFractionDigits:2,maximumFractionDigits:2}); }catch(e){}
+  if($("bigSub")) $("bigSub").textContent=`От ${eur.format(CFG.bigThreshold||1000)} за месяц по одной статье, без аренды, продуктов и других регулярных платежей`;
+  const ad=CFG.adults||[];
+  [["a1","hobby_s"],["a2","hobby_m"]].forEach(([p,c],i)=>{const a=ad[i]; if(!a) return; PERSONS[p].name=a.name; PERSONS[p].desc=a.hobbyDesc||""; CAT[c].name=a.hobbyTitle||("Хобби: "+a.name);});
+  if(CFG.kidsDesc) PERSONS.kids.desc=CFG.kidsDesc;
+  if(CFG.kidsName) PERSONS.kids.name=CFG.kidsName;
+  Object.entries(CFG.categoryNames||{}).forEach(([id,n])=>{ if(CAT[id]) CAT[id].name=n; });
+  if(CFG.excludedNote&&$("xlSub")) $("xlSub").textContent=CFG.excludedNote;
+  renderPersonSeg();
+}
+function renderPersonSeg(){
+  const ad=CFG.adults||[]; const ids=["all"].concat(ad.length?ad.slice(0,2).map((_,i)=>"a"+(i+1)):["a1","a2"]).concat(CFG.noKids?[]:["kids"]).concat(["common"]);
+  $("personSeg").innerHTML=ids.map(p=>`<button type="button" data-p="${p}" aria-pressed="${p===person}">${esc(PERSONS[p].name)}</button>`).join("");
+}
+const ICON={trip:'<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 8.5 13 3.5 9.8 13.5 7.8 9.6z" fill="currentColor"/></svg>',big:'<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3 12.5 8 8 13 3.5 8z" fill="currentColor"/></svg>'};
+const SHORT=[[/Билеты и отели/,"Билеты"]];
+const shortTitle=e=>{if(e.short) return e.short; for(const [re,t] of SHORT) if(re.test(e.title)) return t; const t=String(e.title).replace(/^Поездка (в|во|на) /,"").replace(/\s*\(.*\)$/,""); return t.length>22?t.slice(0,21)+"…":t;};
+
+function renderControls(){
+  $("monthSeg").innerHTML=keys().map(x=>`<button type="button" data-m="${x}" aria-pressed="${x===cur}">${MS[mi(x)]}</button>`).join("");
+  [...$("personSeg").querySelectorAll("button")].forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.p===person)));
+  [...document.querySelectorAll(".tabs [data-tab]")].forEach(b=>b.setAttribute("aria-selected",String(b.dataset.tab===tab)));
+  ["month","year","big","review"].forEach(t=>$("tab-"+t).hidden=t!==tab);
+  $("monthSeg").hidden=tab==="review"; $("personSeg").hidden=tab==="review";
+  const open=S.review.filter(r=>r.status==="open").length; $("revCnt").textContent=open; $("revCnt").hidden=!open;
+  $("pnote").hidden=person==="all"||tab==="review";
+  if(person!=="all") $("pnote").textContent=`Показаны только траты: ${PERSONS[person].name}. Доходы — всей семьи.`;
+}
+function render(){
+  const ks=keys(); if(!ks.length) return;
+  if(!cur||!S.months[cur]) cur=ks[ks.length-1];
+  renderControls();
+  $("lead").textContent=tab==="year"||tab==="big"?`${ks[0].slice(0,4)}: ${MN[mi(ks[0])].toLowerCase()} — ${MN[mi(ks[ks.length-1])].toLowerCase()} · валюта — ${CUR_LABEL()}`:tab==="review"?"Проверка разметки перед советом":`${mLabel(cur)} · валюта — ${CUR_LABEL()}`;
+  if(tab==="month") renderMonth();
+  if(tab==="year") renderYear();
+  if(tab==="big") renderBigTab();
+  if(tab==="review") renderReview();
+  const sig=tab+"|"+cur+"|"+person; if(sig!==animSig){ animSig=sig; animate($("tab-"+tab)); }
+}
+
+let catView=store.get("ss.catView","bars");
+function renderMonth(){
+  const prev=before(cur), pk=prev[prev.length-1];
+  const I=inc(cur), O=out(cur), L=I-O;
+  $("inLbl").textContent=person==="all"?"Пришло":"Пришло (вся семья)";
+  $("tIn").textContent=eur.format(I); $("tOut").textContent=eur.format(O); $("tLeft").textContent=person==="all"?eur.format(L):"—";
+  $("dIn").innerHTML=chip(I,pk?inc(pk):null,"к "+(pk?MS[mi(pk)]:""),true)+chip(I,avg(prev.map(inc)),"к среднему",true);
+  $("dOut").innerHTML=chip(O,pk?out(pk):null,"к "+(pk?MS[mi(pk)]:""),false)+chip(O,avg(prev.map(out)),"к среднему",false);
+  $("dLeft").innerHTML=person!=="all"?'<span class="chip">считается для всей семьи</span>':(I>0?`<span class="chip ${L>=0?"up":"down"}">${L>=0?"отложили":"перерасход"} ${Math.abs(Math.round(L/I*100))}% дохода</span>`:"");
+  renderPace(); renderDiscuss(); renderCats(); renderMonthBig(); renderNotes();
+}
+async function renderPace(){
+  const prev=before(cur), pk=prev[prev.length-1];
+  $("paceTitle").textContent="Темп трат в "+MP[mi(cur)];
+  $("lgCur").textContent=MN[mi(cur)].toLowerCase(); $("lgPrev").textContent=pk?MN[mi(pk)].toLowerCase():"прошлый месяц";
+  const want=cur, wantP=person;
+  const [a,b]=await Promise.all([loadTx(cur),pk?loadTx(pk):Promise.resolve(null)]);
+  if(want!==cur||wantP!==person||tab!=="month") return;
+  if(!a){ $("pace").innerHTML='<p class="empty">Не удалось загрузить операции.</p>'; return; }
+  const cum=(rows,key)=>{const days=new Date(+key.slice(0,4),+key.slice(5),0).getDate(); const d=new Array(days).fill(0); (rows||[]).forEach(r=>{ if(r[2]!=="income"&&r[2]!=="excluded"&&r[0]!=="—"&&isVis(r[2])) d[+r[0]-1]+=r[1]; }); let acc=0; return d.map(v=>acc+=v);};
+  const c1=cum(a,cur), c0=b?cum(b,pk):null, n=c1.length, aO=avg(prev.map(out))||0;
+  const avgL=c1.map((_,i)=>aO*(i+1)/n);
+  const mx=Math.max(1,...c1,...(c0||[0]),aO), step=niceStep(mx/4), top=Math.ceil(mx/step)*step;
+  const W=660,H=240,pl=52,pr=14,pt=12,pb=26, x=i=>pl+(W-pl-pr)*i/(n-1), y=v=>pt+(H-pt-pb)*(1-v/top);
+  const path=arr=>arr.map((v,i)=>(i?"L":"M")+x(i)+","+y(v)).join(" ");
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Темп трат по дням">`+axis(top,step,W,pl,pr,y);
+  s+=`<path d="${path(avgL)}" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="5 4"/>`;
+  if(c0) s+=`<path d="${path(c0.slice(0,n))}" fill="none" stroke="var(--c-other)" stroke-width="2"/>`;
+  s+=`<path d="${path(c1)}" fill="none" stroke="var(--ink)" stroke-width="3" stroke-linejoin="round"/><circle cx="${x(n-1)}" cy="${y(c1[n-1])}" r="5" fill="var(--ink)" stroke="var(--surface)" stroke-width="2"/>`;
+  [0,9,19,n-1].forEach(i=>s+=`<text x="${x(i)}" y="${H-6}" text-anchor="middle">${i+1} ${MS[mi(cur)]}</text>`);
+  const cw=(W-pl-pr)/(n-1);
+  for(let i=0;i<n;i++) s+=`<rect x="${x(i)-cw/2}" y="0" width="${cw}" height="${H}" fill="transparent" data-tip="${i+1} ${MS[mi(cur)]}\n${MN[mi(cur)]}: ${eur.format(c1[i])}${c0?"\n"+MN[mi(pk)]+": "+eur.format(c0[Math.min(i,c0.length-1)]):""}\nСредний темп: ${eur.format(avgL[i])}"/>`;
+  $("pace").innerHTML=s+"</svg>";
+}
+function renderDiscuss(){
+  const prev=before(cur);
+  const rows=visCats().filter(c=>!FIXED.has(c.id)).map(c=>({...c,v:catAmt(cur,c.id),a:avg(prev.map(p=>catAmt(p,c.id)))})).filter(r=>r.a&&r.a>150&&r.v>r.a).map(r=>({...r,d:(r.v-r.a)/r.a})).sort((a,b)=>b.d-a.d).slice(0,4);
+  $("discuss").innerHTML=rows.map(r=>`<li data-cat="${r.id}" tabindex="0" data-tip="${esc(monthCatTip(cur,r.id))}">${ico(r.id,"s")}<span>${esc(r.name)} <span class="sub num">· ${eur.format(r.v)} при среднем ${eur.format(r.a)}</span></span><span class="chip down">+${Math.round(r.d*100)}%</span></li>`).join("")||'<li style="cursor:default"><span></span><span class="empty">Гибкие траты не выше среднего. Хороший месяц.</span><span></span></li>';
+  const ex=S.months[cur].excluded||[];
+  $("exclBox").innerHTML=`<div class="sub">Не в бюджете в этом месяце</div>`+(ex.length?`<div class="chips">${ex.map(e=>`<button type="button" class="chip" data-xl="1" data-tip="${esc(e.title)}\n${eur.format(e.amount)} · ${esc(e.reason)}${e.kind==="inc"?" · поступление":""}\nНе входит в итоги, средние и тренды">${esc(e.title)} · ${e.kind==="inc"?"+":""}${k(e.amount)}</button>`).join("")}</div>`:'<div class="empty" style="font-size:13px">Ничего — все траты в бюджете</div>');
+}
+function renderCats(){
+  const prev=before(cur), ks=keys();
+  [...$("catView").querySelectorAll("button")].forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.v===catView)));
+  $("catTitle").textContent="Куда ушли деньги в "+MP[mi(cur)];
+  $("catSub").textContent=prev.length?`% — к среднему за ${MS[mi(prev[0])]}–${MS[mi(prev[prev.length-1])]} · справа — история по месяцам`:"Первый месяц в учёте";
+  const rows=visCats().map(c=>({...c,v:Math.max(0,catAmt(cur,c.id)),a:avg(prev.map(p=>catAmt(p,c.id))),s:ks.map(x=>Math.max(0,catAmt(x,c.id)))})).filter(r=>r.v>0).sort((a,b)=>b.v-a.v);
+  const T=rows.reduce((a,r)=>a+r.v,0)||1;
+  if(!rows.length){ $("catBody").innerHTML='<p class="empty">Трат нет.</p>'; return; }
+  if(catView==="bars"){
+    const mx=rows[0].v;
+    const spark=(a)=>{const m=Math.max(...a)||1, w=112/a.length;return `<svg viewBox="0 0 112 26" aria-hidden="true">${a.map((v,i)=>{const h=Math.max(1.5,v/m*24);return `<rect x="${i*w+1}" y="${26-h}" width="${w-3}" height="${h}" rx="1.5" fill="${ks[i]===cur?"var(--ink)":"var(--line)"}"/>`;}).join("")}</svg>`;};
+    const row=r=>{const d=r.a?(r.v-r.a)/r.a:null;return `<div class="r" data-cat="${r.id}" tabindex="0" data-tip="${esc(monthCatTip(cur,r.id))}"><span class="nm">${ico(r.id,"s")}<span>${esc(r.name)}</span></span><span class="tr"><div style="width:${r.v/mx*100}%;background:${col(r.id)}"></div></span><span class="v num">${eur.format(r.v)}</span><span class="d">${d==null?"":`<span class="chip ${d>0?"down":"up"}">${d>0?"+":""}${Math.round(d*100)}%</span>`}</span>${spark(r.s)}</div>`;};
+    const flex=rows.filter(r=>!FIXED.has(r.id)), fix=rows.filter(r=>FIXED.has(r.id));
+    const gh=(t,l)=>l.length?`<div class="gh">${t}<span class="num">${eur.format(l.reduce((a,r)=>a+r.v,0))}</span></div>`+l.map(row).join(""):"";
+    $("catBody").innerHTML=gh("Гибкие — то, на что можно влиять",flex)+gh("Регулярные — аренда, школа, кредит",fix);
+  } else if(catView==="donut"){
+    const R=92,r0=58,cx=120,cy=120,gap=.012; let a=-Math.PI/2, s="";
+    const pt=(ang,rr)=>[cx+rr*Math.cos(ang),cy+rr*Math.sin(ang)];
+    rows.forEach(p=>{const sw=p.v/T*Math.PI*2, a0=a+gap, a1=a+sw-gap; a+=sw; if(a1<=a0) return; const lg=(a1-a0)>Math.PI?1:0;
+      const [x0,y0]=pt(a0,R),[x1,y1]=pt(a1,R),[x2,y2]=pt(a1,r0),[x3,y3]=pt(a0,r0);
+      s+=`<path class="seg-arc" data-cat="${p.id}" data-tip="${esc(monthCatTip(cur,p.id))}" d="M${x0},${y0} A${R},${R} 0 ${lg} 1 ${x1},${y1} L${x2},${y2} A${r0},${r0} 0 ${lg} 0 ${x3},${y3} Z" fill="${col(p.id)}"/>`;});
+    $("catBody").innerHTML=`<div class="donut-wrap"><svg viewBox="0 0 240 240" role="img" aria-label="Доли категорий">${s}</svg><div class="donut-center"><b class="num">${eur.format(T)}</b><span class="sub">ушло в ${MP[mi(cur)]}</span></div></div>`+legendHTML(rows,T);
+  } else {
+    $("catBody").innerHTML=`<div class="tmap" id="tmap"></div>`+legendHTML(rows,T);
+    requestAnimationFrame(()=>drawTree(rows,T));
+  }
+}
+const legendHTML=(rows,T)=>`<div class="ldg">${rows.map(r=>`<span data-cat="${r.id}">${ico(r.id,"s")}${esc(r.name)} · ${Math.round(r.v/T*100)}%</span>`).join("")}</div>`;
+function drawTree(rows,T){
+  const el=$("tmap"); if(!el) return; const W=el.clientWidth, H=el.clientHeight; let html="";
+  const items=rows.map(r=>({...r,area:r.v/T*W*H}));
+  let x=0,y=0,w=W,h=H,row=[];
+  const worst=(rw,side)=>{const s=rw.reduce((a,b)=>a+b.area,0), mx=Math.max(...rw.map(r=>r.area)), mn=Math.min(...rw.map(r=>r.area)); return Math.max(side*side*mx/(s*s),(s*s)/(side*side*mn));};
+  const place=(r,X,Y,Wd,Ht)=>{html+=`<div data-cat="${r.id}" data-tip="${esc(monthCatTip(cur,r.id))}" style="left:${X}px;top:${Y}px;width:${Wd}px;height:${Ht}px;background:${col(r.id)}">${Wd>80&&Ht>44?`<b class="num">${k(r.v)}</b>${esc(r.name)}`:""}</div>`;};
+  const layout=rw=>{const s=rw.reduce((a,b)=>a+b.area,0); if(w>=h){const cw=s/h; let yy=y; rw.forEach(r=>{const rh=r.area/cw; place(r,x,yy,cw,rh); yy+=rh;}); x+=cw; w-=cw;} else {const rh=s/w; let xx=x; rw.forEach(r=>{const cw=r.area/rh; place(r,xx,y,cw,rh); xx+=cw;}); y+=rh; h-=rh;}};
+  items.forEach(it=>{const side=Math.min(w,h); if(!row.length||worst(row.concat(it),side)<=worst(row,side)) row.push(it); else {layout(row); row=[it];}});
+  if(row.length) layout(row);
+  el.innerHTML=html;
+}
+function bigRow(e,x,mx){
+  const c=evCat(e);
+  return `<div class="r" data-tip="${esc(evTip(e,x))}" data-bm="${x}" data-bc="${c}"><span class="ic">${ICON[e.type]}</span><span class="nm">${esc(e.title)}</span><span class="mo">${MN[mi(x)]}</span><span class="ct">${ico(c,"s")}<span>${esc(CAT[c]?.name||"")}</span></span><span class="am"><i style="width:${e.amount/mx*100}%;background:${col(c)}"></i><b class="num">${eur.format(e.amount)}</b></span></div>`;
+}
+function renderMonthBig(){
+  const ev=events(cur).slice().sort((a,b)=>b.amount-a.amount), mx=Math.max(1,...ev.map(e=>e.amount));
+  $("mbTitle").textContent="Крупное в "+MP[mi(cur)];
+  $("monthBig").innerHTML=ev.map(e=>bigRow(e,cur,mx)).join("")+(ev.length?`<div class="tot"><span>Итого</span><span class="num">${eur.format(ev.reduce((a,e)=>a+e.amount,0))}</span></div>`:'<p class="empty">Крупных трат не было.</p>');
+}
+function renderNotes(){
+  $("notes").innerHTML=(S.months[cur].notes||[]).map(t=>`<p>${esc(t)}</p>`).join("")||'<p class="empty">Комментарий появится после разбора выписок.</p>';
+  const ds=S.decisions.filter(d=>d.month===cur);
+  $("decisions").innerHTML=ds.map(d=>`<li class="${d.done?"done":""}"><input type="checkbox" id="d_${esc(d.id)}" data-id="${esc(d.id)}" ${d.done?"checked":""} ${canWrite?"":"disabled"}><label for="d_${esc(d.id)}">${esc(d.text)}</label></li>`).join("")||'<li class="empty">Пока ничего не решили. Запишите первое решение.</li>';
+  $("addForm").hidden=!canWrite;
+}
+
+function renderYear(){
+  const ks=keys(), I=ks.reduce((s,x)=>s+inc(x),0), O=ks.reduce((s,x)=>s+out(x),0);
+  const yc=id=>ks.reduce((s,x)=>s+catAmt(x,id),0);
+  const ex=ks.flatMap(x=>S.months[x].excluded||[]).filter(e=>e.kind==="exp");
+  const trips=ks.flatMap(x=>S.months[x].events||[]).filter(e=>e.type==="trip");
+  const tile=(kk,v,s,c,ys,viz)=>`<div class="card tile"${ys?` data-ys="${ys}" role="button" tabindex="0" aria-label="${esc(kk)} — подробно"`:""}><div class="k">${ys?ico(ys.replace(/^cat:/,""),"l"):""}${kk}</div><div class="v num"${c?` style="color:${c}"`:""}>${v}</div>${viz||""}<div class="s">${s}</div></div>`;
+  // mini bars: values per month, colour, tooltip label
+  const bars=(vals,color,lab)=>{const W=200,H=44,n=vals.length,mx=Math.max(1,...vals.map(Math.abs)),bw=W/n,mxI=vals.indexOf(Math.max(...vals));
+    return `<svg class="mini-v" viewBox="0 0 ${W} ${H+12}" preserveAspectRatio="none" aria-hidden="true">${vals.map((v,i)=>{const h=Math.max(v>0?2:0,v/mx*H);const sel=ks[i]===cur;return `<rect x="${i*bw+2}" y="${H-h}" width="${bw-4}" height="${h}" rx="2" fill="${color}" opacity="${sel||i===mxI?1:.4}"/><rect x="${i*bw}" y="0" width="${bw}" height="${H+12}" fill="transparent" data-tip="${MN[mi(ks[i])]}: ${eur.format(v)}${lab?" · "+lab:""}"/>`;}).join("")}${ks.map((x,i)=>`<text x="${i*bw+bw/2}" y="${H+11}" text-anchor="middle" class="ml${x===cur?" on":""}">${MS[mi(x)][0].toUpperCase()}</text>`).join("")}</svg>`;};
+  const diverge=(vals)=>{const W=200,H=44,n=vals.length,mx=Math.max(1,...vals.map(Math.abs)),bw=W/n,mid=H/2;
+    return `<svg class="mini-v" viewBox="0 0 ${W} ${H+12}" preserveAspectRatio="none" aria-hidden="true"><line x1="0" x2="${W}" y1="${mid}" y2="${mid}" stroke="var(--muted)" stroke-width="1"/>${vals.map((v,i)=>{const h=Math.max(1.5,Math.abs(v)/mx*(mid-2));return `<rect class="${v<0?"grn":""}" x="${i*bw+2}" y="${v>=0?mid-h:mid}" width="${bw-4}" height="${h}" rx="2" fill="${v>=0?"var(--good)":"var(--bad)"}" opacity="${ks[i]===cur?1:.75}"/><rect x="${i*bw}" y="0" width="${bw}" height="${H+12}" fill="transparent" data-tip="${MN[mi(ks[i])]}: ${v>=0?"+":"−"}${eur.format(Math.abs(v))}"/>`;}).join("")}${ks.map((x,i)=>`<text x="${i*bw+bw/2}" y="${H+11}" text-anchor="middle" class="ml${x===cur?" on":""}">${MS[mi(x)][0].toUpperCase()}</text>`).join("")}</svg>`;};
+  const stack=(parts)=>{const T=parts.reduce((a,p)=>a+p[1],0)||1; return `<div class="mini-stack">${parts.filter(p=>p[1]>0).map(p=>`<i style="width:${p[1]/T*100}%;background:${p[2]}" data-tip="${esc(p[0])}: ${eur.format(p[1])} · ${Math.round(p[1]/T*100)}%"></i>`).join("")}</div><div class="mini-lg">${parts.filter(p=>p[1]>0).map(p=>`<span><i class="dot" style="background:${p[2]}"></i>${esc(p[0])} ${Math.round(p[1]/T*100)}%</span>`).join("")}</div>`;};
+  const share=(v,c)=>{const p=O?v/O:0; return `<div class="mini-share"><div><i style="width:${Math.max(1,p*100)}%;background:${c}"></i></div><span>${p<.01?"<1":Math.round(p*100)}% всех трат</span></div>`;};
+  const incG={}; ks.forEach(x=>(S.months[x].income||[]).forEach(i=>{const g=incGroup(i.group); incG[g]=(incG[g]||0)+(+i.amount||0);}));
+  const netV=ks.map(x=>inc(x)-out(x)); let acc=0; const cumV=netV.map(v=>acc+=v);
+  const tl=[];
+  tl.push(tile(person==="all"?"Пришло за год":"Пришло (вся семья)",eur.format(I),`в среднем ${eur.format(I/ks.length)} в месяц`,null,"inc",bars(ks.map(inc),"var(--inc)")+stack(INC_G().map((g,i)=>[g,incG[g]||0,INC_C[i]]))));
+  tl.push(tile("Ушло за год",eur.format(O),`в среднем ${eur.format(O/ks.length)} в месяц · больше всего — ${MN[mi(ks[ks.map(out).indexOf(Math.max(...ks.map(out)))])].toLowerCase()}`,null,"out",bars(ks.map(out),"var(--exp)")));
+  if(person==="all") tl.push(tile("Итог года",(I-O>=0?"+":"−")+eur.format(Math.abs(I-O)),`${netV.filter(v=>v>=0).length} мес. в плюсе, ${netV.filter(v=>v<0).length} в минусе · ${Math.min(...cumV)<0?"хуже всего с начала года было "+eur.format(Math.min(...cumV)):"с начала года всё время в плюсе"}`,I-O>=0?"var(--good)":"var(--bad)","net",diverge(netV)));
+  if(person==="all"&&ks.some(x=>(S.months[x].excluded||[]).length)){const exl=ks.flatMap(x=>S.months[x].excluded||[]).filter(e=>e.kind==="exp"); tl.push(tile("Не в бюджете",eur.format(exl.reduce((a,e)=>a+e.amount,0)),(CFG.excludedTile||"не входят в семейные итоги"),null,"xl",stack(exl.map((e,i)=>[shortTitle(e),e.amount,["var(--c-other)","var(--ink-2)","var(--c-hobby_s)"][i%3]]))));}
+  const catTile=(id,title,sub)=>tile(title,eur.format(yc(id)),sub,null,"cat:"+id,bars(ks.map(x=>catAmt(x,id)),col(id),CAT[id].name)+share(yc(id),col(id)));
+  const tr2=trips.filter(e=>evCat(e)==="travel"); if(isVis("travel")&&yc("travel")>0) tl.push(catTile("travel","Поездки",`${tr2.length} ${plural(tr2.length,"поездка","поездки","поездок")} на отдых · самая дорогая — ${tr2.length?shortTitle(tr2.slice().sort((a,b)=>b.amount-a.amount)[0]):"—"} ${trips.length>tr2.length?` · ещё ${trips.length-tr2.length} учтены в других категориях (хобби, здоровье)`:""}`));
+  const hasA=n=>!(CFG.adults)||CFG.adults.length>=n;
+  const extra=[["hobby_s",hasA(1),PERSONS.a1.desc],["hobby_m",hasA(2),PERSONS.a2.desc],["kids",!CFG.noKids,PERSONS.kids.desc||"школы, кружки, лагеря"],["housing",true,"аренда, коммуналка, ремонт"],["groceries",true,"супермаркеты и рынки"],["cafe",true,"рестораны, кафе, доставка"],["transport",true,"машина, топливо, такси"],["health",true,"врачи, аптеки, красота"],["shopping",true,"одежда, техника, подарки"],["fun",true,"спорт и развлечения"]];
+  extra.forEach(([id,ok,sub])=>{ if(ok&&isVis(id)&&yc(id)>0&&tl.length<8) tl.push(catTile(id,CAT[id].name,sub)); });
+  $("tiles").innerHTML=tl.slice(0,8).join("");
+  renderTrend(); renderHeat(); renderIncome(); renderPeople(); renderAccounts();
+}
+const LC={mode:"month"};
+function renderTrend(){
+  [...$("lcMode").querySelectorAll("button")].forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.mode===LC.mode)));
+  const ks=keys(), n=ks.length, cum=LC.mode==="cum";
+  let ai=0,ao=0; const I=[],O=[],N=[];
+  ks.forEach(x=>{const i=inc(x),o=out(x); ai+=i; ao+=o; I.push(cum?ai:i); O.push(cum?ao:o); N.push(cum?ai-ao:i-o);});
+  const W=900, pl=64, pr=118, evH=0, p1t=100, p1h=230, gap=34, p2h=120, p2t=p1t+p1h+gap, pb=30, H=p2t+p2h+pb;
+  const gw=(W-pl-pr)/n, X=i=>pl+gw*i+gw/2;
+  const mx1=Math.max(1,...I,...O), st1=niceStep(mx1/4), top1=Math.ceil(mx1/st1)*st1, y1=v=>p1t+p1h*(1-v/top1);
+  const nmax=Math.max(0,...N), nmin=Math.min(0,...N), span=Math.max(1,nmax-nmin), y2=v=>p2t+16+(p2h-36)*((nmax-v)/span);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Доходы, расходы и итог по месяцам">`;
+  ks.forEach((x,i)=>{ if(x===cur) s+=`<rect x="${pl+gw*i+2}" y="0" width="${gw-4}" height="${H-6}" rx="16" fill="var(--surface-2)"/>`; });
+  // panel 1 grid
+  for(let v=0;v<=top1+.1;v+=st1) s+=`<line x1="${pl}" x2="${W-pr}" y1="${y1(v)}" y2="${y1(v)}" stroke="var(--grid)"/><text x="${pl-10}" y="${y1(v)+4}" text-anchor="end">${v>=1000?(v/1000).toLocaleString("ru-RU")+" тыс":v}</text>`;
+  // gap fill between lines
+  for(let i=0;i<n-1;i++){const d0=I[i]-O[i], d1=I[i+1]-O[i+1];
+    const poly=(xa,ia,oa,xb,ib,ob,c)=>`<path d="M${xa},${y1(ia)} L${xb},${y1(ib)} L${xb},${y1(ob)} L${xa},${y1(oa)} Z" fill="${c}" opacity=".16"/>`;
+    if((d0>=0)===(d1>=0)) s+=poly(X(i),I[i],O[i],X(i+1),I[i+1],O[i+1],d0>=0?"var(--good)":"var(--bad)");
+    else {const t=d0/(d0-d1), xm=X(i)+(X(i+1)-X(i))*t, vm=I[i]+(I[i+1]-I[i])*t;
+      s+=poly(X(i),I[i],O[i],xm,vm,vm,d0>=0?"var(--good)":"var(--bad)")+poly(xm,vm,vm,X(i+1),I[i+1],O[i+1],d1>=0?"var(--good)":"var(--bad)");}}
+  const line=(A,c,w)=>`<path class="dr" pathLength="1" d="${A.map((v,i)=>(i?"L":"M")+X(i)+","+y1(v)).join(" ")}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linejoin="round" stroke-linecap="round"/>`+A.map((v,i)=>`<circle cx="${X(i)}" cy="${y1(v)}" r="${ks[i]===cur?5.5:3.5}" fill="${c}" stroke="var(--surface)" stroke-width="2"/>`).join("");
+  s+=line(O,"var(--exp)",2.5)+line(I,"var(--inc)",2.5);
+  // annotations: biggest event of each month, pinned above the higher point
+  if(!cum) ks.forEach((x,i)=>{const ev=events(x).slice().sort((a,b)=>b.amount-a.amount); if(!ev.length) return;
+    const e=ev[0], trip=e.type==="trip", py=y1(Math.max(I[i],O[i])), amt=ks_(e.amount).replace(" тыс.","k")+" "+CSYM;
+    const name=shortTitle(e), label=`${name}  ${amt}`;
+    const w=Math.min(2*gw-10,label.length*6.3+30), bh=26, by=i%2?40:6;
+    let bx=X(i)-w/2; bx=Math.max(pl-4,Math.min(W-pr-w+4,bx));
+    const tipTxt=`${mLabel(x)} — крупное (${ev.length}):\n`+ev.map(q=>"• "+q.title+" — "+eur.format(q.amount)).join("\n");
+    s+=`<g data-tip="${esc(tipTxt)}" data-m="${x}" style="cursor:pointer"><line x1="${X(i)}" x2="${X(i)}" y1="${by+bh}" y2="${py-6}" stroke="var(--muted)" stroke-dasharray="2 3"/><rect x="${bx}" y="${by}" width="${w}" height="${bh}" rx="13" fill="var(--surface)" stroke="var(--line)"/><circle cx="${bx+13}" cy="${by+bh/2}" r="4" fill="${col(evCat(e))}"/>`+
+      `<text x="${bx+23}" y="${by+17}" style="fill:var(--ink);font-size:11.5px;font-weight:600">${trip?"✈ ":""}${esc(name)} <tspan style="fill:var(--ink-2);font-weight:500">${amt}</tspan></text></g>`;});
+  // end labels in right margin
+  let la={y:y1(I[n-1]),t:"Пришло",v:I[n-1],c:"var(--inc)"}, lb={y:y1(O[n-1]),t:"Ушло",v:O[n-1],c:"var(--exp)"};
+  const [hi,lo]=la.y<=lb.y?[la,lb]:[lb,la]; if(lo.y-hi.y<34){const mid=(hi.y+lo.y)/2; hi.y=mid-17; lo.y=mid+17;}
+  [la,lb].forEach(L2=>s+=`<text x="${W-pr+10}" y="${L2.y-2}" style="fill:${L2.c};font-size:12px;font-weight:600">${L2.t}</text><text x="${W-pr+10}" y="${L2.y+13}" style="fill:var(--ink);font-size:12px;font-weight:600">${k(L2.v)}</text>`);
+  s+=`<text x="${pl}" y="${p1t-6}" style="fill:var(--ink-2);font-size:12px">${cum?"Пришло и ушло с начала года":"Пришло и ушло за месяц"}</text>`;
+  // panel 2: net bars
+  s+=`<text x="${pl}" y="${p2t-10}" style="fill:var(--ink-2);font-size:12px">${cum?"Накопленный итог с начала года":"Итог месяца: пришло минус ушло"}</text>`;
+  s+=`<line x1="${pl}" x2="${W-pr}" y1="${y2(0)}" y2="${y2(0)}" stroke="var(--muted)"/>`;
+  const bw=Math.min(44,gw-22);
+  N.forEach((v,i)=>{const x=X(i)-bw/2, y0=y2(0), yv=y2(v), top=Math.min(y0,yv), h=Math.max(1.5,Math.abs(yv-y0)), c=v>=0?"var(--good)":"var(--bad)";
+    s+=`<rect class="${v<0?"grn":""}" x="${x}" y="${top}" width="${bw}" height="${h}" rx="4" fill="${c}" opacity="${ks[i]===cur?1:.8}"/>`;
+    const ly=v>=0?top-6:top+h+13; s+=`<text x="${X(i)}" y="${ly}" text-anchor="middle" style="fill:${c};font-size:11.5px;font-weight:600">${v>=0?"+":"−"}${ks_(Math.abs(v))}</text>`;});
+  // month labels + hover columns
+  ks.forEach((x,i)=>{s+=`<g class="${x===cur?"sel":""}"><text class="ml" x="${X(i)}" y="${H-10}" text-anchor="middle" style="font-size:12px">${MS[mi(x)]}</text></g>`;
+    const ev=events(x);
+    const t=`${mLabel(x)}${cum?" — с начала года":""}\nПришло: ${eur.format(I[i])}\nУшло: ${eur.format(O[i])}\nИтог: ${N[i]>=0?"+":"−"}${eur.format(Math.abs(N[i]))}`+(ev.length&&!cum?`\n\nКрупное (${ev.length}):\n`+ev.slice().sort((a,b)=>b.amount-a.amount).slice(0,5).map(q=>"• "+q.title+" — "+eur.format(q.amount)).join("\n"):"");
+    s+=`<rect x="${pl+gw*i}" y="${evH}" width="${gw}" height="${H-evH}" fill="transparent" style="cursor:pointer" data-m="${x}" data-tip="${esc(t)}"/>`;});
+  $("trend").innerHTML=s+"</svg>";
+}
+function renderHeat(){
+  const ks=keys();
+  const rows=visCats().map(c=>({...c,s:ks.map(x=>Math.max(0,catAmt(x,c.id)))})).map(r=>({...r,t:r.s.reduce((a,b)=>a+b,0)})).filter(r=>r.t>0).sort((a,b)=>b.t-a.t);
+  const cell=(v,a)=>{const r=a?v/a:0, al=Math.min(.85,Math.max(.04,(r-.4)/2)); return `background:rgba(var(--heat),${al.toFixed(2)});${al>.5?"color:#fff;":""}`;};
+  let h=`<thead><tr><th>Категория</th>${ks.map(x=>`<th class="${x===cur?"sel":""}">${MS[mi(x)]}</th>`).join("")}<th>Итого</th><th>В месяц</th></tr></thead><tbody>`;
+  rows.forEach(r=>{const a=r.t/ks.length; h+=`<tr><td class="l" data-zoom="${r.id}" tabindex="0" role="button"><span>${ico(r.id,"s")}${esc(r.name)}</span></td>${r.s.map((v,i)=>`<td class="${ks[i]===cur?"sel":""}" style="${cell(v,a)}" data-hm="${ks[i]}" data-hc="${r.id}" data-tip="${esc(monthCatTip(ks[i],r.id))}\n\n${a?Math.round(v/a*100):0}% от среднего месяца">${ks_(v)}</td>`).join("")}<td class="t">${ks_(r.t)}</td><td class="a">${ks_(a)}</td></tr>`;});
+  h+=`<tr class="sum"><td class="l" data-ys="out" role="button" tabindex="0" style="cursor:pointer">Всего →</td>${ks.map(x=>`<td>${ks_(out(x))}</td>`).join("")}<td>${ks_(ks.reduce((a,x)=>a+out(x),0))}</td><td>${ks_(avg(ks.map(out)))}</td></tr></tbody>`;
+  $("heat").innerHTML=h;
+}
+function renderIncome(){
+  const ks=keys(), G=INC_G(), C=INC_C;
+  $("incLegend").innerHTML=G.map((g,i)=>`<span><i class="dot" style="background:${C[i]}"></i>${esc(g)}</span>`).join("");
+  const data=ks.map(x=>{const g={}; (S.months[x].income||[]).forEach(i=>{const k2=incGroup(i.group); g[k2]=(g[k2]||0)+(+i.amount||0);}); return {x,g};});
+  const W=520,H=260,pl=50,pr=8,pt=12,pb=30, mx=Math.max(1,...data.map(d=>G.reduce((s,k2)=>s+Math.max(0,d.g[k2]||0),0)));
+  const step=niceStep(mx/4), top=Math.ceil(mx/step)*step, y=v=>pt+(H-pt-pb)*(1-v/top), gw=(W-pl-pr)/data.length, bw=Math.min(34,gw-12);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Доходы по источникам">`+axis(top,step,W,pl,pr,y);
+  data.forEach((d,n)=>{let acc=0; const x=pl+gw*n+(gw-bw)/2;
+    G.forEach((g,gi)=>{const v=Math.max(0,d.g[g]||0); if(!v) return; const y1=y(acc+v), y0=y(acc); s+=`<rect x="${x}" y="${y1}" width="${bw}" height="${Math.max(0,y0-y1)}" fill="${C[gi]}" stroke="var(--surface)" stroke-width="2"/>`; acc+=v;});
+    s+=`<g class="${d.x===cur?"sel":""}"><text class="ml" x="${x+bw/2}" y="${H-10}" text-anchor="middle">${MS[mi(d.x)]}</text></g><rect x="${pl+gw*n}" y="0" width="${gw}" height="${H}" fill="transparent" style="cursor:pointer" data-m="${d.x}" data-tip="${esc(mLabel(d.x))}\n${G.map(g=>g+": "+eur.format(d.g[g]||0)).join("\n")}"/>`;});
+  $("incChart").innerHTML=s+"</svg>";
+}
+function renderPeople(){
+  const ks=keys(), yc=id=>ks.reduce((s,x)=>s+catAmt(x,id),0);
+  const topItems=(cats,n)=>{const m={}; ks.forEach(x=>(S.months[x].expenses||[]).filter(e=>cats.includes(e.cat)).forEach(e=>(e.items||[]).forEach(i=>{m[i.label]=(m[i.label]||0)+i.amount;}))); return Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,n);};
+  const spark=(vals,c)=>{const W=150,H=34,mx=Math.max(1,...vals),bw=W/vals.length;return `<svg class="pp-sp" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true">${vals.map((v,i)=>{const h=Math.max(v>0?2:0,v/mx*H);return `<rect x="${i*bw+1.5}" y="${H-h}" width="${bw-3}" height="${h}" rx="2" fill="${c}" opacity="${ks[i]===cur?1:.45}"/><rect x="${i*bw}" y="0" width="${bw}" height="${H}" fill="transparent" data-tip="${MN[mi(ks[i])]}: ${eur.format(v)}"/>`;}).join("")}</svg>`;};
+  const P=["a1","a2","kids","common"].filter(p=>!(CFG.adults&&CFG.adults.length<2&&p==="a2")&&!(CFG.noKids&&p==="kids")).map(p=>{const cats=PERSONS[p].cats; const vals=ks.map(x=>cats.reduce((a,c)=>a+catAmt(x,c),0)); return {p,...PERSONS[p],v:vals.reduce((a,b)=>a+b,0),vals};});
+  const T=P.reduce((a,p)=>a+p.v,0)||1, pers=P.filter(p=>p.p!=="common"), PT=pers.reduce((a,p)=>a+p.v,0)||1;
+  const rowHTML=p=>{
+    let detail;
+    if(p.p==="common"){const parts=p.cats.map(c=>[c,yc(c)]).filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]); const ct=parts.reduce((a,x)=>a+x[1],0)||1;
+      detail=`<div class="pp-stack">${parts.map(([c,v])=>`<i style="width:${v/ct*100}%;background:${col(c)}" data-tip="${esc(CAT[c].name)}: ${eur.format(v)} · ${Math.round(v/ct*100)}%"></i>`).join("")}</div><div class="pp-items">${parts.slice(0,4).map(([c,v])=>`<span>${ico(c,"s")}${esc(CAT[c].name.split(":")[0])} <b class="num">${k(v)}</b></span>`).join("")}</div>`;}
+    else {const it=topItems(p.cats,3); detail=`<div class="pp-items">${it.length?it.map(([l,v])=>`<span>${esc(l)} <b class="num">${k(v)}</b></span>`).join(""):'<span class="empty">крупных покупок нет</span>'}</div>`;}
+    return `<div class="pp-row" data-ys="person:${p.p}" role="button" tabindex="0" aria-label="${esc(p.name)} — подробно" style="${person===p.p?"background:var(--surface-2)":""}">
+      <div class="pp-h"><span class="pp-n">${ico("p_"+p.p)}${esc(p.name)}<small>${esc(p.desc)}</small></span><span class="pp-v num">${eur.format(p.v)}<small>${eur.format(p.v/ks.length)} в мес. · ${p.v/T<.01?"<1":Math.round(p.v/T*100)}%</small></span></div>
+      <div class="pp-b">${spark(p.vals,col(p.c))}<div class="pp-d">${detail}</div></div></div>`;};
+  $("ppl").innerHTML=`<div class="pp-split"><div class="sub" style="margin-bottom:6px">Личные траты без общего: кто сколько</div><div class="pp-stack big">${pers.map(p=>`<i style="width:${Math.max(p.v/PT*100,1.5)}%;background:${col(p.c)}" data-tip="${esc(p.name)}: ${eur.format(p.v)} · ${Math.round(p.v/PT*100)}% личных трат"></i>`).join("")}</div><div class="pp-items">${pers.map(p=>`<span>${ico("p_"+p.p,"s")}${esc(p.name)} <b class="num">${Math.round(p.v/PT*100)}%</b></span>`).join("")}</div></div>`+P.map(rowHTML).join("");
+  $("pplBar").innerHTML="";
+}
+
+const BG={g:"cat",t:"all"};
+function renderBigTab(){
+  const ks=keys();
+  const L=[["Поездки",e=>e.type==="trip","travel"],["Дети: школа и занятия",e=>e.type!=="trip"&&e.cat==="kids","kids"],["Дом и переезд",e=>e.type!=="trip"&&e.cat==="housing","housing"],[CAT.hobby_s.name,e=>e.type!=="trip"&&e.cat==="hobby_s","hobby_s"],[CAT.hobby_m.name,e=>e.type!=="trip"&&e.cat==="hobby_m","hobby_m"],["Машины",e=>e.type!=="trip"&&e.cat==="transport","transport"],["Прочее",e=>e.type!=="trip"&&!["kids","housing","hobby_s","hobby_m","transport"].includes(e.cat),"other"]];
+  const all=ks.flatMap(x=>events(x).map(e=>({...e,x})));
+  const mx=Math.max(1,...all.map(e=>e.amount));
+  let g=`<div class="lanes" style="--n:${ks.length}"><div class="h"></div>${ks.map(x=>`<div class="h ${x===cur?"sel":""}" data-m="${x}">${MS[mi(x)]}</div>`).join("")}`;
+  L.forEach(([name,f,c])=>{const list=all.filter(f); if(!list.length) return; const tot=list.reduce((a,e)=>a+e.amount,0);
+    g+=`<div class="ln">${ico(c,"s")}<div>${esc(name)}<div class="sub num">${k(tot)}</div></div></div>`;
+    ks.forEach(x=>{const es=list.filter(e=>e.x===x).sort((a,b)=>b.amount-a.amount);
+      g+=`<div class="cell ${x===cur?"sel":""}">${es.map(e=>`<div class="blk" style="border-left:3px solid ${col(evCat(e))}" data-tip="${esc(evTip(e,x))}" data-bm="${x}" data-bc="${evCat(e)}"><b class="num" style="font-size:${12+Math.round(e.amount/mx*4)}px">${eur.format(e.amount)}</b><small>${esc(shortTitle(e))}</small></div>`).join("")}</div>`;});});
+  $("lanes").innerHTML=all.length?g+"</div>":'<p class="empty">Крупных трат нет.</p>';
+  const trips=all.filter(e=>e.type==="trip").sort((a,b)=>b.amount-a.amount);
+  const KC={"Билеты":"var(--t-1)","Жильё":"var(--t-2)","Еда":"var(--t-3)","Транспорт":"var(--t-4)","Покупки и прочее":"var(--t-5)"};
+  $("tripTot").textContent=trips.length?`${trips.length} ${plural(trips.length,"поездка","поездки","поездок")} · ${eur.format(trips.reduce((a,e)=>a+e.amount,0))}`:"";
+  $("trips").innerHTML=trips.map(t=>tripCard(t,KC)).join("")||'<p class="empty">Поездок нет.</p>';
+  renderBigList(all);
+  const ex=ks.flatMap(x=>(S.months[x].excluded||[]).map(e=>({...e,x})));
+  $("xlCard").hidden=person!=="all";
+  $("xlTot").textContent=ex.length?`расходы ${eur.format(ex.filter(e=>e.kind==="exp").reduce((a,e)=>a+e.amount,0))}`:"";
+  $("xlList").innerHTML=ex.map(e=>`<div class="r" data-tip="${esc(e.title)}\n${eur.format(e.amount)}${e.details?.length?"\n\n"+e.details.join("\n"):""}"><span>${esc(e.title)}</span><span class="mo sub">${MN[mi(e.x)]}</span><span class="rs">${esc(e.reason)}${e.kind==="inc"?" · поступление":""}</span><b class="num ${e.kind==="inc"?"neg":""}">${e.kind==="inc"?"+":""}${eur.format(e.amount)}</b></div>`).join("")||'<p class="empty">Пусто.</p>';
+}
+function renderBigList(all){
+  let rows=all.slice(); if(BG.t!=="all") rows=rows.filter(e=>e.type===BG.t);
+  const mx=Math.max(1,...rows.map(e=>e.amount));
+  const head=(t,list,dc)=>`<div class="grp-h"><b>${dc?`<i class="dot" style="background:${dc}"></i>`:""}${esc(t)}</b><span class="num">${list.length} · ${eur.format(list.reduce((a,e)=>a+e.amount,0))}</span></div>`;
+  let h="";
+  if(BG.g==="cat"){const by={}; rows.forEach(e=>(by[evCat(e)]=by[evCat(e)]||[]).push(e));
+    Object.entries(by).map(([c,l])=>({c,l,t:l.reduce((a,e)=>a+e.amount,0)})).sort((a,b)=>b.t-a.t).forEach(g=>{h+=head(CAT[g.c]?.name||g.c,g.l,col(g.c))+g.l.sort((a,b)=>a.x.localeCompare(b.x)||b.amount-a.amount).map(e=>bigRow(e,e.x,mx)).join("");});}
+  else if(BG.g==="month"){keys().forEach(x=>{const l=rows.filter(e=>e.x===x).sort((a,b)=>b.amount-a.amount); if(l.length) h+=head(MN[mi(x)],l)+l.map(e=>bigRow(e,x,mx)).join("");});}
+  else h=rows.sort((a,b)=>b.amount-a.amount).map(e=>bigRow(e,e.x,mx)).join("");
+  $("bigList").classList.toggle("bycat",BG.g==="cat");
+  $("bigList").innerHTML=(h||'<p class="empty">Ничего не найдено.</p>')+(rows.length?`<div class="tot"><span>Итого: ${rows.length} ${plural(rows.length,"трата","траты","трат")}</span><span class="num">${eur.format(rows.reduce((a,e)=>a+e.amount,0))}</span></div>`:"");
+  [["bgGroup","g"],["bgType","t"]].forEach(([id,key])=>[...$(id).querySelectorAll("button")].forEach(b=>b.setAttribute("aria-pressed",String(b.dataset[key]===BG[key]))));
+}
+
+let revF="open";
+const TARGETS=CATS.map(c=>[c.id,c.name]).concat([["income","Доход"],["excluded","Не в бюджете"]]);
+const tName=id=>TARGETS.find(t=>t[0]===id)?.[1]||id;
+function renderReview(){
+  [...$("revFilter").querySelectorAll("button")].forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.f===revF)));
+  const list=S.review.slice().sort((a,b)=>(a.order??0)-(b.order??0)).filter(r=>revF==="all"||(revF==="open"?r.status==="open":r.status!=="open"));
+  const open=S.review.filter(r=>r.status==="open").length;
+  $("revSub").textContent=`${open} ${plural(open,"вопрос ждёт","вопроса ждут","вопросов ждут")} ответа · Claude применит решения как правила при следующем разборе`;
+  $("revList").innerHTML=list.map(r=>{
+    const done=r.status!=="open";
+    const ans=r.status==="ok"?"Верно, оставить как есть":r.status==="move"?"Перенести в «"+tName(r.target)+"»":r.status==="exclude"?"Не в бюджете":"";
+    return `<div class="it ${done?"done":""}" data-rid="${esc(r.id)}"><div><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:baseline"><b style="font-weight:600;font-size:16px">${esc(r.title)}</b><span class="sub num">${eur.format(r.amount)} · ${r.count} ${plural(r.count,"операция","операции","операций")} · ${(r.months||[]).map(m=>MS[mi(m)]).join(", ")}</span></div>
+      <div class="src">${(r.src||[]).map(s=>`<span>${esc(s)}</span>`).join("")}</div>
+      <div class="q">${esc(r.question||"")}</div>
+      <div class="sub" style="margin-top:4px">Сейчас: <b style="color:var(--ink);font-weight:600">${esc(tName(r.current))}</b>${r.suggest&&r.suggest!==r.current?` · Claude предлагает: ${esc(tName(r.suggest))}`:""}</div>
+      ${done?`<div class="ans" style="margin-top:6px">✓ ${esc(ans)}${r.comment?" · «"+esc(r.comment)+"»":""}</div>`:""}</div>
+      <div class="acts">${done?`<button class="btn o sm" type="button" data-ra="reopen">Изменить ответ</button>`:`
+        <div class="row"><button class="btn g sm" type="button" data-ra="ok">Верно</button><button class="btn o sm" type="button" data-ra="exclude">Не в бюджете</button></div>
+        <div class="row"><select aria-label="Перенести в категорию" data-rsel>${TARGETS.map(t=>`<option value="${t[0]}" ${t[0]===(r.suggest||r.current)?"selected":""}>${esc(t[1])}</option>`).join("")}</select><button class="btn sm" type="button" data-ra="move">Перенести</button></div>
+        <input type="text" maxlength="200" placeholder="Комментарий для Claude (необязательно)" aria-label="Комментарий" data-rcom value="${esc(r.comment||"")}">`}</div></div>`;}).join("")||`<p class="empty">${revF==="open"?"Все вопросы отвечены. Спасибо!":"Пока нет ответов."}</p>`;
+}
+$("revList").addEventListener("click",async e=>{
+  const b=e.target.closest("[data-ra]"); if(!b) return; const it=b.closest("[data-rid]"), id=it.dataset.rid, act=b.dataset.ra;
+  const r=S.review.find(x=>x.id===id); if(DEMO_ON){ note("Это демо: ответы не сохраняются. Загрузите свои выписки — и вопросы будут про ваши траты."); return; } if(!r||!db) return;
+  const patch=act==="reopen"?{status:"open"}:{status:act,target:act==="move"?it.querySelector("[data-rsel]").value:(act==="exclude"?"excluded":r.current),comment:it.querySelector("[data-rcom]")?.value.trim()||"",answeredAt:new Date().toISOString()};
+  b.disabled=true;
+  try{ await db.collection("review").doc(id).update(patch); Object.assign(r,patch); renderControls(); renderReview(); }
+  catch(err){ b.disabled=false; note("Не получилось сохранить ответ. Отвечать может владелец страницы или участник с правом редактирования."); }
+});
+function note(t){ $("banner").textContent=t; $("banner").hidden=false; setTimeout(()=>{$("banner").hidden=true;},6000); }
+
+async function loadTx(key){
+  if(DEMO_ON) return DEMO.tx[key]||[];
+  if(key in txCache) return txCache[key];
+  if(!db) return null;
+  try{ const s=await db.doc("tx/"+key).get(); txCache[key]=s.exists?(s.data().rows||[]):[]; }catch(e){ txCache[key]=null; }
+  return txCache[key];
+}
+let lastFocus=null;
+async function openSheet(kind){
+  lastFocus=document.activeElement; tip.hidden=true;
+  const title=kind==="income"?"Поступления":kind==="all"?"Все траты":kind==="excluded"?"Не в бюджете":CAT[kind]?.name||kind;
+  $("shTitle").textContent=title; setIc($("shTitle"),kind==="all"?"out":kind==="excluded"?"xl":kind==="income"?"inc":kind); $("shSub").textContent=mLabel(cur)+" · загружаю операции…"; $("shBody").innerHTML=""; $("shChips").innerHTML="";
+  ysKey=null; $("sheetBg").querySelector(".sheet").classList.remove("wide"); showBg("sheetBg"); $("shClose").focus();
+  const rows=await loadTx(cur);
+  if(!rows){ $("shSub").textContent="Не удалось загрузить операции. Обновите страницу."; return; }
+  const sel=rows.filter(r=>kind==="all"?(r[2]!=="income"&&r[2]!=="excluded"&&isVis(r[2])):r[2]===kind);
+  const total=sel.reduce((s,r)=>s+r[1],0);
+  $("shSub").textContent=`${mLabel(cur)} · ${sel.length} ${plural(sel.length,"операция","операции","операций")} · ${eur.format(total)}`;
+  if(kind!=="income"&&kind!=="excluded"){ const a=avg(before(cur).map(x=>kind==="all"?out(x):catAmt(x,kind))); if(a) $("shChips").innerHTML=`<span class="chip">в среднем ${eur.format(a)}</span>`+chip(total,a,"к среднему",false); }
+  if(kind==="excluded") $("shChips").innerHTML='<span class="chip">не входит в итоги, средние и тренды</span>';
+  const groups={}; sel.forEach(r=>{(groups[r[3]]=groups[r[3]]||[]).push(r);});
+  const gl=Object.entries(groups).map(([l,rs])=>({l,rs,t:rs.reduce((s,r)=>s+r[1],0)})).sort((a,b)=>b.t-a.t);
+  $("shBody").innerHTML=gl.map((g,i)=>`<div class="grp"><button type="button" aria-expanded="false" data-g="${i}"><span class="lab">${esc(g.l)}</span><span class="cnt">${g.rs.length>1?g.rs.length+" опер.":""}</span><b class="num ${g.t<0?"neg":""}">${eur2.format(g.t)}</b></button><ul hidden>${g.rs.map(r=>`<li class="num"><span>${r[0]==="—"?"—":r[0]+"."+cur.slice(5)}</span><span>${r[5]?esc(r[5])+" · ":""}${esc(r[4])}${kind==="all"?" · "+esc(CAT[r[2]]?.name||""):""}</span><span class="${r[1]<0?"neg":""}">${eur2.format(r[1])}</span></li>`).join("")}</ul></div>`).join("")||'<p class="empty">Операций нет.</p>';
+}
+const motionOK=()=>matchMedia("(prefers-reduced-motion: no-preference)").matches;
+function showBg(id){const bg=$(id); clearTimeout(bg._t); bg.classList.remove("out"); bg.hidden=false;}
+function hideBg(id){const bg=$(id); if(bg.hidden) return; const done=()=>{bg.hidden=true; bg.classList.remove("out");}; if(motionOK()){bg.classList.add("out"); clearTimeout(bg._t); bg._t=setTimeout(done,170);} else done();}
+function closeSheet(){ hideBg("sheetBg"); ysKey=null; lastFocus?.focus?.(); }
+$("shClose").onclick=closeSheet;
+$("sheetBg").addEventListener("click",e=>{ if(e.target===$("sheetBg")) closeSheet(); });
+$("shBody").addEventListener("click",e=>{
+  const b=e.target.closest("button[data-g]"); if(b){ const ul=b.nextElementSibling; ul.hidden=!ul.hidden; b.setAttribute("aria-expanded",String(!ul.hidden)); return; }
+  const v=e.target.closest("[data-yv]"); if(v){ ysView=v.dataset.yv; renderYS(true); return; }
+  const mo=e.target.closest("[data-more]"); if(mo){ const w=mo.nextElementSibling; w.hidden=false; mo.remove(); return; }
+  const j=e.target.closest("[data-yj]"); if(j){ if(ysView!=="month"){ ysView="month"; renderYS(false); } const t=document.getElementById("ys-"+j.dataset.yj); t?.scrollIntoView({behavior:motionOK()?"smooth":"auto",block:"start"}); return; }
+  const ap=e.target.closest("[data-ap]"); if(ap){ person=ap.dataset.ap; closeSheet(); render(); return; }
+  const ym=e.target.closest("[data-ym]"); if(ym){ cur=ym.dataset.ym; setTab("month"); closeSheet(); render(); window.scrollTo({top:0,behavior:motionOK()?"smooth":"auto"}); return; }
+});
+
+
+/* ===== Year detail window ===== */
+let ysKey=null, ysView="month", YS=null;
+const dd=(d,x)=>d==="—"||d==null?"вне выписки":String(d).padStart(2,"0")+"."+x.slice(5);
+async function openYear(key){
+  lastFocus=document.activeElement; tip.hidden=true; ysKey=key; ysView="month";
+  const ks=keys(), [kind,arg]=key.split(":");
+  let title,flt,color="var(--exp)",desc="";
+  if(kind==="inc"){title="Пришло за год";flt=r=>r.c==="income";color="var(--inc)";}
+  else if(kind==="out"){title=person==="all"?"Ушло за год":"Ушло за год · "+PERSONS[person].name;flt=r=>r.c!=="income"&&r.c!=="excluded"&&isVis(r.c);}
+  else if(kind==="xl"){title="Не в бюджете";flt=r=>r.c==="excluded";color="var(--c-other)";desc=CFG.excludedNote||"видно здесь, но не входит в итоги, средние и тренды";}
+  else if(kind==="cat"){title=CAT[arg]?.name||arg;flt=r=>r.c===arg;color=col(arg);}
+  else if(kind==="acc"){const A=(S.accounts?.accounts||[]).find(a=>a.id===arg); const nm=A?.name||arg; const TXN=nm; title="Траты со счёта: "+nm; flt=r=>r.acc===TXN&&r.c!=="income"&&r.c!=="excluded"; color=acol(arg); desc="";}
+  else if(kind==="person"){const P=PERSONS[arg]; title=arg==="common"?"Общие траты семьи":"Траты: "+P.name; desc=P.desc||""; flt=r=>P.cats.includes(r.c); color=col(P.c);}
+  else {title="Итог по месяцам";}
+  const sh=$("sheetBg").querySelector(".sheet"); sh.classList.add("wide");
+  $("shTitle").textContent=title; setIc($("shTitle"),kind==="cat"?arg:kind==="person"?"p_"+arg:kind==="acc"?"bank":kind); $("shSub").textContent=(desc?desc+" · ":"")+"загружаю операции…"; $("shChips").innerHTML=""; $("shBody").innerHTML="";
+  showBg("sheetBg"); $("shClose").focus();
+  if(kind==="net"){ YS={kind,ks}; renderYS(true); return; }
+  const all=await Promise.all(ks.map(loadTx)); if(ysKey!==key) return;
+  if(all.some(a=>!a)){ $("shSub").textContent="Не удалось загрузить операции. Обновите страницу."; return; }
+  const rows=ks.flatMap((x,i)=>all[i].map(r=>({x,d:r[0],a:+r[1]||0,c:r[2],l:r[3],acc:r[4],m:r[5]}))).filter(flt);
+  YS={kind,arg,ks,rows,color,title,desc}; renderYS(true);
+}
+function renderYS(anim){
+  if(!YS) return; const {kind,ks}=YS, B=$("shBody");
+  if(kind==="net"){
+    const I=ks.map(inc), O=ks.map(out); let acc=0;
+    const Ti=I.reduce((a,b)=>a+b,0), To=O.reduce((a,b)=>a+b,0);
+    $("shSub").textContent=`${ks.length} мес. · пришло ${eur.format(Ti)} · ушло ${eur.format(To)}`;
+    $("shChips").innerHTML=`<span class="chip">итог ${Ti-To>=0?"+":"−"}${eur.format(Math.abs(Ti-To))}</span><span class="chip">${I.filter((v,i)=>v>=O[i]).length} мес. в плюсе</span><span class="chip">${I.filter((v,i)=>v<O[i]).length} в минусе</span>`;
+    let h=ysChart(ks.map((x,i)=>I[i]-O[i]),null,true)+`<table class="ys-net num"><thead><tr><th>Месяц</th><th>Пришло</th><th>Ушло</th><th>Итог</th><th class="hm">С начала года</th></tr></thead><tbody>`;
+    ks.forEach((x,i)=>{const n=I[i]-O[i]; acc+=n; const top=visCats().map(c=>[c,catAmt(x,c.id)]).filter(q=>q[1]>0).sort((a,b)=>b[1]-a[1]).slice(0,3); const ev=events(x).slice().sort((a,b)=>b.amount-a.amount)[0];
+      h+=`<tr data-ym="${x}" id="ys-${x}" title="Открыть ${MN[mi(x)].toLowerCase()}"><td><b style="font-weight:600">${MN[mi(x)]}</b><small><span class="hm">${top.map(([c,v])=>esc(c.name.split(":")[0])+" "+k(v)).join(" · ")}<br></span>${ev?"крупное: "+esc(shortTitle(ev))+" "+k(ev.amount):""}</small></td><td style="color:var(--inc)">${eur.format(I[i])}</td><td>${eur.format(O[i])}</td><td style="color:${n>=0?"var(--good)":"var(--bad)"};font-weight:600">${n>=0?"+":"−"}${eur.format(Math.abs(n))}</td><td class="hm" style="color:${acc>=0?"var(--good)":"var(--bad)"}">${acc>=0?"+":"−"}${eur.format(Math.abs(acc))}</td></tr>`;});
+    B.innerHTML=h+`</tbody></table><div class="hint">Нажмите на месяц — откроется его разбор</div>`;
+    if(anim) animate(B); return;
+  }
+  const {rows,color}=YS, T=rows.reduce((a,r)=>a+r.a,0);
+  const mt=ks.map(x=>rows.filter(r=>r.x===x).reduce((a,r)=>a+r.a,0)), mxI=mt.indexOf(Math.max(...mt));
+  const multi=kind==="out"||kind==="acc"||(kind==="person"&&PERSONS[YS.arg].cats.length>1);
+  $("shSub").textContent=`${YS.desc?YS.desc+" · ":""}${MN[mi(ks[0])].toLowerCase()} — ${MN[mi(ks[ks.length-1])].toLowerCase()} · ${rows.length} ${plural(rows.length,"операция","операции","операций")}`;
+  let ch=`<span class="chip"><b>${eur.format(T)}</b>&nbsp;за год</span><span class="chip">в среднем ${eur.format(T/ks.length)} в месяц</span>`;
+  if(rows.length) ch+=`<span class="chip">больше всего — ${MN[mi(ks[mxI])].toLowerCase()}, ${eur.format(mt[mxI])}</span>`;
+  if(kind!=="inc"&&kind!=="out"&&kind!=="xl"){const O=ks.reduce((a,x)=>a+out(x),0); if(O) ch+=`<span class="chip">${Math.round(T/O*100)||"<1"}% всех трат</span>`;}
+  $("shChips").innerHTML=ch;
+  const views=[["month","По месяцам"],["label","По статьям"]].concat(multi?[["cat","По категориям"]]:[]);
+  let h=`<div class="ys-tools"><div class="seg sm" role="group" aria-label="Вид">${views.map(([v,t])=>`<button type="button" data-yv="${v}" aria-pressed="${ysView===v}">${t}</button>`).join("")}</div>${kind==="person"&&YS.arg!==person?`<button type="button" class="lnk" data-ap="${YS.arg}">Показать весь дашборд: ${esc(PERSONS[YS.arg].name)}</button>`:""}</div>`;
+  h+=ysChart(mt,color,false);
+  const dot=c=>multi&&ysView!=="cat"&&CAT[c]?`${ico(c,"s")}`:"";
+  const li=(r,withM)=>`<li class="num"><span>${dd(r.d,r.x)}</span><span>${r.m?esc(r.m)+" · ":""}${esc(r.acc||"")}${multi&&CAT[r.c]?" · "+esc(CAT[r.c].name):""}</span><span class="${r.a<0?"neg":""}">${eur2.format(r.a)}</span></li>`;
+  const grpHTML=(g,i,meta)=>`<div class="grp"><button type="button" aria-expanded="false" data-g="${i}"><span class="lab">${dot(g.c)}${esc(g.l)}${meta?`<span class="mm">${meta}</span>`:""}</span><span class="cnt">${g.rs.length>1?g.rs.length+" опер.":""}</span><b class="num ${g.t<0?"neg":""}">${eur2.format(g.t)}</b></button><ul hidden>${g.rs.map(r=>li(r)).join("")}</ul></div>`;
+  const groupBy=(list,keyf)=>{const m={}; list.forEach(r=>{const kk=keyf(r); (m[kk]=m[kk]||{l:r.l,c:r.c,rs:[],t:0}); m[kk].rs.push(r); m[kk].t+=r.a;}); return Object.values(m).sort((a,b)=>b.t-a.t);};
+  const sortR=rs=>rs.sort((a,b)=>a.x.localeCompare(b.x)||(+a.d||0)-(+b.d||0));
+  const capped=(arr,fn,n)=>arr.slice(0,n).map(fn).join("")+(arr.length>n?`<button type="button" class="ys-more" data-more>Ещё ${arr.length-n} ${plural(arr.length-n,"статья","статьи","статей")} →</button><div hidden>${arr.slice(n).map((g,i)=>fn(g,i+n)).join("")}</div>`:"");
+  let gi=0;
+  if(!rows.length) h+='<p class="empty">Операций нет.</p>';
+  else if(ysView==="month"){
+    ks.forEach((x,i)=>{const rs=rows.filter(r=>r.x===x); if(!rs.length) return; const gs=groupBy(rs,r=>r.l+"|"+r.c); gs.forEach(g=>sortR(g.rs));
+      h+=`<section class="ys-sec" id="ys-${x}"><div class="ys-mh"><b>${MN[mi(x)]}</b><span class="sub">${rs.length} опер. · ${T?Math.round(mt[i]/T*100):0}% года</span><span class="num" style="font-weight:600">${eur.format(mt[i])}</span></div>${capped(gs,g=>grpHTML(g,gi++),8)}</section>`;});
+  } else if(ysView==="label"){
+    const gs=groupBy(rows,r=>r.l+"|"+r.c); gs.forEach(g=>sortR(g.rs));
+    h+=`<section class="ys-sec">${capped(gs,g=>grpHTML(g,gi++,[...new Set(g.rs.map(r=>MS[mi(r.x)]))].join(", ")),25)}</section>`;
+  } else {
+    const byc={}; rows.forEach(r=>(byc[r.c]=byc[r.c]||[]).push(r));
+    Object.entries(byc).map(([c,rs])=>({c,rs,t:rs.reduce((a,r)=>a+r.a,0)})).sort((a,b)=>b.t-a.t).forEach(cg=>{
+      const gs=groupBy(cg.rs,r=>r.l); gs.forEach(g=>sortR(g.rs));
+      h+=`<section class="ys-sec"><div class="ys-mh"><b>${ico(cg.c,"s")}${esc(CAT[cg.c]?.name||cg.c)}</b><span class="sub">${cg.rs.length} опер. · ${T?Math.round(cg.t/T*100):0}%</span><span class="num" style="font-weight:600">${eur.format(cg.t)}</span></div>${capped(gs,g=>grpHTML(g,gi++,[...new Set(g.rs.map(r=>MS[mi(r.x)]))].join(", ")),6)}</section>`;});
+  }
+  B.innerHTML=h; B.scrollTop=0; if(anim) animate(B);
+}
+function ysChart(vals,color,diverging){
+  const ks=YS.ks, W=900, H=150, pb=22, n=vals.length, gw=W/n, bw=Math.min(54,gw-16), mx=Math.max(1,...vals.map(Math.abs));
+  const mid=diverging?(H-pb)/2+6:H-pb, sc=diverging?(H-pb)/2-14:H-pb-20;
+  let s=`<div class="ys-chart"><svg viewBox="0 0 ${W} ${H}" role="img" aria-label="По месяцам">`;
+  if(diverging) s+=`<line x1="0" x2="${W}" y1="${mid}" y2="${mid}" stroke="var(--line)"/>`;
+  vals.forEach((v,i)=>{const x=gw*i+(gw-bw)/2, h=Math.max(v?2:0,Math.abs(v)/mx*sc), y=v>=0?mid-h:mid, c=diverging?(v>=0?"var(--good)":"var(--bad)"):color, sel=ks[i]===cur;
+    s+=`<rect class="${v<0?"grn":""}" x="${x}" y="${y}" width="${bw}" height="${h}" rx="5" fill="${c}" opacity="${sel?1:.72}"/>`;
+    s+=`<text x="${x+bw/2}" y="${v>=0?y-6:y+h+13}" text-anchor="middle" style="fill:var(--ink);font-weight:600">${v?(diverging?(v>=0?"+":"−"):"")+ks_(Math.abs(v)):""}</text><text x="${x+bw/2}" y="${H-4}" text-anchor="middle" style="${sel?"fill:var(--ink);font-weight:600":""}">${MS[mi(ks[i])]}</text>`;
+    s+=`<rect x="${gw*i}" y="0" width="${gw}" height="${H}" fill="transparent" style="cursor:pointer" data-yj="${ks[i]}" data-tip="${MN[mi(ks[i])]}: ${diverging&&v>=0?"+":""}${eur.format(v)}\nНажмите — перейти к месяцу"/>`;});
+  return s+`</svg></div>`;
+}
+
+/* ===== Motion ===== */
+let animSig="";
+function animate(root){
+  if(!root||!motionOK()) return;
+  root.classList.remove("anim"); void root.offsetWidth; root.classList.add("anim");
+  [...root.querySelectorAll(".card")].forEach((c,i)=>c.style.setProperty("--i",Math.min(i,12)));
+  [...root.querySelectorAll(".grp,.ys-sec,.ys-net tr")].forEach((c,i)=>c.style.setProperty("--i",Math.min(i,14)));
+  root.querySelectorAll("svg").forEach(svg=>{let j=0; svg.querySelectorAll('rect:not([fill="transparent"]),path:not([fill="none"])').forEach(el=>{if(!el.closest("g[data-tip]")) el.style.animationDelay=(140+Math.min(j++,30)*28)+"ms";});});
+  countUps(root);
+  clearTimeout(root._at); root._at=setTimeout(()=>root.classList.remove("anim"),1900);
+}
+function countUps(root){
+  root.querySelectorAll(".tile .v, .total .val, .pp-v").forEach(el=>{const node=el.firstChild; if(!node||node.nodeType!==3) return;
+    const m=node.textContent.match(/^([+−-]?)([\d\s  ]+)\s?\S{1,4}$/); if(!m) return; const n=+m[2].replace(/\D/g,""); if(!n) return;
+    const t0=performance.now(), D=900, fin=node.textContent;
+    const step=t=>{const p=Math.min(1,(t-t0)/D), e=1-Math.pow(1-p,3); node.textContent=p<1?m[1]+eur.format(Math.round(n*e)):fin; if(p<1) requestAnimationFrame(step);}; requestAnimationFrame(step);});
+}
+let zoomCat=null, holdT=null;
+function openZoom(id){
+  clearTimeout(holdT); zoomCat=id; lastFocus=document.activeElement; tip.hidden=true;
+  const ks=keys(), vals=ks.map(x=>Math.max(0,catAmt(x,id))), tot=vals.reduce((a,b)=>a+b,0), a=tot/ks.length;
+  $("zTitle").textContent=CAT[id].name; setIc($("zTitle"),id); $("zSub").textContent=`${ks[0].slice(0,4)} · за ${ks.length} мес. ${eur.format(tot)} · в среднем ${eur.format(a)} в месяц`;
+  const mxI=vals.indexOf(Math.max(...vals)), mnI=vals.indexOf(Math.min(...vals));
+  $("zChips").innerHTML=`<span class="chip">больше всего — ${MN[mi(ks[mxI])].toLowerCase()}, ${eur.format(vals[mxI])}</span><span class="chip">меньше всего — ${MN[mi(ks[mnI])].toLowerCase()}, ${eur.format(vals[mnI])}</span>`;
+  const W=900,H=380,pl=60,pr=16,pt=30,pb=40, mx=Math.max(...vals)||1, step=niceStep(mx/5), top=Math.ceil(mx/step)*step;
+  const y=v=>pt+(H-pt-pb)*(1-v/top), gw=(W-pl-pr)/ks.length, bw=Math.min(56,gw-18);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(CAT[id].name)} по месяцам">`+axis(top,step,W,pl,pr,y);
+  s+=`<line x1="${pl}" x2="${W-pr}" y1="${y(a)}" y2="${y(a)}" stroke="var(--ink)" stroke-dasharray="5 4" opacity=".5"/><text x="${pl+4}" y="${y(a)-6}" style="fill:var(--ink-2)">среднее ${k(a)}</text>`;
+  vals.forEach((v,i)=>{const x=pl+gw*i+(gw-bw)/2, sel=ks[i]===cur;
+    s+=bar(x,y(v),y(0),bw,col(id),`opacity="${sel?1:.75}"`)+`<text x="${x+bw/2}" y="${y(v)-7}" text-anchor="middle" style="fill:var(--ink);font-weight:600">${k(v)}</text>`;
+    s+=`<g class="${sel?"sel":""}"><text class="ml" x="${x+bw/2}" y="${H-14}" text-anchor="middle">${MS[mi(ks[i])]}</text></g><rect x="${pl+gw*i}" y="0" width="${gw}" height="${H}" fill="transparent" style="cursor:pointer" data-zm="${ks[i]}" data-tip="${esc(monthCatTip(ks[i],id))}"/>`;});
+  $("zChart").innerHTML=s+"</svg>"; showBg("zoomBg"); $("zClose").focus(); animate($("zChart"));
+}
+function closeZoom(){ hideBg("zoomBg"); zoomCat=null; lastFocus?.focus?.(); }
+$("zClose").onclick=closeZoom;
+$("zoomBg").addEventListener("click",e=>{ if(e.target===$("zoomBg")) return closeZoom(); const r=e.target.closest("[data-zm]"); if(r){ const id=zoomCat; cur=r.dataset.zm; closeZoom(); render(); openSheet(id);} });
+$("heat").addEventListener("pointerover",e=>{const c=e.target.closest("[data-zoom]"); if(!c||c.contains(e.relatedTarget)) return; clearTimeout(holdT); if(e.pointerType==="mouse") holdT=setTimeout(()=>openZoom(c.dataset.zoom),2000);});
+$("heat").addEventListener("pointerout",e=>{const c=e.target.closest("[data-zoom]"); if(!c||c.contains(e.relatedTarget)) return; clearTimeout(holdT);});
+
+const setTab=t=>{tab=t; store.set("ss.tab",tab);};
+document.addEventListener("click",e=>{
+  if(e.target.closest(".sheet")) return;
+  if(e.target.closest("#revList")) return;
+  const t=e.target.closest("[data-tab]"); if(t){ setTab(t.dataset.tab); render(); return; }
+  const p=e.target.closest("[data-p]"); if(p){ person=p.dataset.p; render(); return; }
+  const ys=e.target.closest("[data-ys]"); if(ys){ openYear(ys.dataset.ys); return; }
+  const pc=e.target.closest("[data-person]"); if(pc){ person=person===pc.dataset.person?"all":pc.dataset.person; render(); return; }
+  const v=e.target.closest("[data-v]"); if(v){ catView=v.dataset.v; store.set("ss.catView",catView); renderCats(); return; }
+  const z=e.target.closest("[data-zoom]"); if(z){ openZoom(z.dataset.zoom); return; }
+  const hm=e.target.closest("[data-hm]"); if(hm){ cur=hm.dataset.hm; render(); openSheet(hm.dataset.hc); return; }
+  const bm=e.target.closest("[data-bm]"); if(bm){ cur=bm.dataset.bm; render(); openSheet(bm.dataset.bc); return; }
+  const xl=e.target.closest("[data-xl]"); if(xl){ openSheet("excluded"); return; }
+  const act=e.target.closest("[data-act]"); if(act){ setTab("big"); render(); setTimeout(()=>$(act.dataset.act==="xl"?"xlCard":"trips").scrollIntoView({behavior:"smooth",block:"start"}),50); return; }
+  const m=e.target.closest("[data-m]"); if(m){ cur=m.dataset.m; const inSeg=!!m.closest(".seg"); if(!inSeg&&tab==="year") setTab("month"); render(); if(!inSeg) window.scrollTo({top:0,behavior:"smooth"}); return; }
+  const c=e.target.closest("[data-cat]"); if(c){ openSheet(c.dataset.cat); return; }
+});
+$("lcMode").addEventListener("click",e=>{const b=e.target.closest("[data-mode]"); if(!b) return; LC.mode=b.dataset.mode; renderTrend();});
+$("bgGroup").addEventListener("click",e=>{const b=e.target.closest("[data-g]"); if(b){BG.g=b.dataset.g; renderBigTab();}});
+$("bgType").addEventListener("click",e=>{const b=e.target.closest("[data-t]"); if(b){BG.t=b.dataset.t; renderBigTab();}});
+$("revFilter").addEventListener("click",e=>{const b=e.target.closest("[data-f]"); if(b){revF=b.dataset.f; renderReview();}});
+$("cardIn").addEventListener("click",()=>openSheet("income"));
+$("cardOut").addEventListener("click",()=>openSheet("all"));
+$("cardLeft").addEventListener("click",()=>openYear("net"));
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){ if(!$("zoomBg").hidden&&!$("zoomBg").classList.contains("out")) closeZoom(); else if(!$("sheetBg").hidden) closeSheet(); }
+  if((e.key==="Enter"||e.key===" ")&&e.target.matches?.("[data-cat],[data-zoom],[data-person],[data-bm],[data-act],[data-ys],.trip,#cardIn,#cardOut,#cardLeft")){ e.preventDefault(); e.target.click(); }
+});
+
+/* structured tooltip */
+const tipCache={k:null};
+function tipHTML(txt){
+  const L=String(txt).split("\n"); let h="", i=0, ops=[], kv=[];
+  const flush=()=>{ if(ops.length){h+=`<div class="tops">${ops.join("")}</div>`; ops=[];} if(kv.length){h+=`<div class="tkv">${kv.join("")}</div>`; kv=[];} };
+  const money=v=>eur2.format(+v).replace(",00","");
+  const clean=m=>m.replace(/^Sent money to /i,"").replace(/^Received money from /i,"").replace(/^Paid to /i,"").trim();
+  h+=`<div class="tt">${esc(L[0]||"")}</div>`; i=1;
+  if(L[1]&&!L[1].startsWith("•")&&L[1].trim()&&!/:\s*$/.test(L[1])&&!/^[^:]{2,24}: /.test(L[1])){
+    const parts=L[1].split(" · "); const first=parts[0];
+    const am=/\d/.test(first)&&first.includes(CSYM)?`<b>${esc(first)}</b>`:`<span>${esc(first)}</span>`;
+    h+=`<div class="tm">${am}${parts.slice(1).map(p=>{const c=CATS.find(c=>c.name===p.trim()); return `<span style="display:inline-flex;align-items:center;gap:5px">${c?`${ico(c.id,"s")}`:""}${esc(p)}</span>`;}).join("")}</div>`; i=2;
+  }
+  for(;i<L.length;i++){const l=L[i];
+    if(!l.trim()){ continue; }
+    if(/^Если что-то не так/.test(l)){ flush(); h+=`<div class="tf">✎ ${esc(l)}</div>`; continue; }
+    let m;
+    if((m=l.match(/^•\s*(\d\d\.\d\d) · (-?[\d.]+) \S{1,4} · ([^·]+?) · (.*)$/))){
+      if(!ops.length&&!/tsec/.test(h.slice(-200))) h+=`<div class="tsec">Операции банка</div>`;
+      const [mer,note]=m[4].split(" | "); const tr=/^(Sent money|Paid to|Received)/i.test(mer);
+      ops.push(`<span class="d">${m[1]}</span><span class="n">${esc(note?note:clean(mer))}<small>${tr?"перевод · ":""}${note?esc(clean(mer))+" · ":""}${esc(m[3])}</small></span><span class="a">${money(m[2])}</span>`); continue; }
+    if((m=l.match(/^•\s*(.*?) — ([-\d\s  .,]+\s?\S{1,4})$/))){ ops.push(`<span class="d">•</span><span class="n">${esc(m[1])}</span><span class="a">${esc(m[2])}</span>`); continue; }
+    if((m=l.match(/^(.{1,40}):\s*$/))){ flush(); h+=`<div class="tsec">${esc(m[1])}</div>`; continue; }
+    if((m=l.match(/^(.*?) \((\d+)\):\s*$/))){ flush(); h+=`<div class="tsec">${esc(m[1])} · ${m[2]}</div>`; continue; }
+    if((m=l.match(/^([^:•]{2,24}):\s+(.+)$/))){ kv.push(`<span>${esc(m[1])}</span><span>${esc(m[2])}</span>`); continue; }
+    if((m=l.match(/^•\s*(.*)$/))){ ops.push(`<span class="d">·</span><span class="n" style="color:var(--ink-2)">${esc(m[1])}</span><span></span>`); continue; }
+    flush(); h+=`<div class="tx">${esc(l)}</div>`;
+  }
+  flush(); return h;
+}
+const tip=$("tip");
+document.addEventListener("pointermove",e=>{const t=e.target.closest?.("[data-tip]"); if(!t){tip.hidden=true;tipCache.k=null;return;}
+  const txt=t.getAttribute("data-tip"); if(tipCache.k!==txt){tipCache.k=txt; tip.innerHTML=tipHTML(txt);} tip.hidden=false;
+  const w=tip.offsetWidth, hh=tip.offsetHeight; let x=e.clientX+16, y=e.clientY+16;
+  if(x+w>innerWidth-8) x=Math.max(8,e.clientX-16-w); if(y+hh>innerHeight-8) y=Math.max(8,e.clientY-16-hh);
+  tip.style.left=x+"px"; tip.style.top=y+"px";});
+let rz=null; window.addEventListener("resize",()=>{ clearTimeout(rz); rz=setTimeout(()=>{ if(tab==="month"&&catView==="tree") renderCats(); },150); });
+
+$("decisions").addEventListener("change",async e=>{const id=e.target.getAttribute("data-id"); if(!id||!db) return; try{await db.collection("decisions").doc(id).update({done:e.target.checked});}catch(err){$("addMsg").textContent="Не получилось сохранить отметку.";}});
+$("addForm").addEventListener("submit",async e=>{e.preventDefault(); const text=$("addText").value.trim(); if(!text||!db) return;
+  try{await db.collection("decisions").add({month:cur,text,done:false,createdAt:new Date().toISOString()}); $("addText").value=""; $("addMsg").textContent="";}
+  catch(err){canWriteReal=false; canWrite=false; $("addMsg").textContent="Записывать решения может только владелец страницы или участник с правом редактирования."; renderNotes();}});
+
+renderPersonSeg();
+/* ===== Data: demo until the family's own data is uploaded ===== */
+const DEMO={"months":{"2026-01":{"month":"2026-01","income":[{"source":"Зарплата Анны (Brightwave)","who":"Анна","amount":2100.0,"group":"Зарплата Анны"},{"source":"Зарплата Ивана (Tecnologías Norte)","who":"Иван","amount":1750.0,"group":"Зарплата Ивана"},{"source":"Мелкие поступления","who":"Семья","amount":260.0,"group":"Прочее"}],"expenses":[{"cat":"cafe","amount":122.07,"items":[{"label":"Restaurante La Pepita","amount":37.02},{"label":"Pizzeria Bella Napoli","amount":33.32},{"label":"Bar Del Pla","amount":31.05},{"label":"Cafe Camelia","amount":20.68}]},{"cat":"fun","amount":25.15,"items":[{"label":"Zoo De Barcelona","amount":25.15}]},{"cat":"groceries","amount":350.89,"items":[{"label":"Fruiteria Sant Antoni","amount":96.82},{"label":"Bonpreu","amount":83.54},{"label":"Mercadona Barcelona","amount":80.37},{"label":"Condis","amount":63.91},{"label":"Lidl Gracia","amount":26.25}]},{"cat":"health","amount":8.87,"items":[]},{"cat":"hobby_m","amount":45.0,"items":[{"label":"Скалолазание","amount":45.0}]},{"cat":"hobby_s","amount":55.0,"items":[{"label":"Йога","amount":55.0}]},{"cat":"housing","amount":935.98,"items":[{"label":"Аренда квартиры","amount":850.0},{"label":"Электричество","amount":61.18},{"label":"Вода","amount":24.8}]},{"cat":"kids","amount":107.0,"items":[{"label":"Музыкальная школа","amount":62.0},{"label":"Бассейн","amount":45.0}]},{"cat":"other","amount":69.88,"items":[{"label":"Телефон и интернет","amount":44.9},{"label":"Netflix.Com","amount":13.99},{"label":"Spotify P2","amount":10.99}]},{"cat":"shopping","amount":90.78,"items":[{"label":"Primark","amount":56.05},{"label":"Amazon Eu Sarl","amount":34.73}]},{"cat":"transport","amount":160.01,"items":[{"label":"Shell Ronda","amount":89.02},{"label":"Cepsa Diagonal","amount":40.63},{"label":"Bsm Parking","amount":19.8},{"label":"Tmb Metro Barcelona","amount":10.56}]}],"excluded":[],"notes":["Плюс 2,1 тыс. €: продали коляску (260 €), крупных трат не было."],"events":[]},"2026-02":{"month":"2026-02","income":[{"source":"Зарплата Анны (Brightwave)","who":"Анна","amount":2100.0,"group":"Зарплата Анны"},{"source":"Зарплата Ивана (Tecnologías Norte)","who":"Иван","amount":1750.0,"group":"Зарплата Ивана"}],"expenses":[{"cat":"cafe","amount":164.41,"items":[{"label":"Cafe Camelia","amount":64.92},{"label":"Bar Del Pla","amount":59.62},{"label":"Sushi Shop","amount":39.87}]},{"cat":"fun","amount":31.88,"items":[{"label":"Bowling Barcelona","amount":31.88}]},{"cat":"groceries","amount":461.5,"items":[{"label":"Bonpreu","amount":180.89},{"label":"Mercadona Barcelona","amount":112.21},{"label":"Lidl Gracia","amount":80.61},{"label":"Condis","amount":52.25},{"label":"Fruiteria Sant Antoni","amount":35.54}]},{"cat":"health","amount":23.88,"items":[{"label":"Farmacia Del Carmen","amount":23.88}]},{"cat":"hobby_m","amount":45.0,"items":[{"label":"Скалолазание","amount":45.0}]},{"cat":"hobby_s","amount":55.0,"items":[{"label":"Йога","amount":55.0}]},{"cat":"housing","amount":939.15,"items":[{"label":"Аренда квартиры","amount":850.0},{"label":"Электричество","amount":64.35},{"label":"Вода","amount":24.8}]},{"cat":"kids","amount":107.0,"items":[{"label":"Музыкальная школа","amount":62.0},{"label":"Бассейн","amount":45.0}]},{"cat":"other","amount":69.88,"items":[{"label":"Телефон и интернет","amount":44.9},{"label":"Netflix.Com","amount":13.99},{"label":"Spotify P2","amount":10.99}]},{"cat":"shopping","amount":55.82,"items":[{"label":"Zara","amount":55.82}]},{"cat":"transport","amount":162.93,"items":[{"label":"Shell Ronda","amount":102.97},{"label":"Cepsa Diagonal","amount":39.63},{"label":"Tmb Metro Barcelona","amount":10.64}]},{"cat":"travel","amount":423.0,"items":[{"label":"Выходные в Вал-де-Нурия","amount":423.0}]}],"excluded":[],"notes":["Плюс 1,3 тыс. €.","Выходные в Вал-де-Нурия — 423 € вместе с поездом."],"events":[{"type":"trip","cat":"travel","title":"Выходные в Вал-де-Нурия","short":"Вал-де-Нурия","amount":423.0,"dates":"13.02–15.02","details":["3 операций с 13.02 по 15.02","Renfe Viajeros — 189.00 €","Hotel Vall De Nuria — 176.00 €","Restaurante Vall De Nuria — 58.00 €"],"br":{"Билеты":189,"Жильё":176,"Еда":58}}]},"2026-03":{"month":"2026-03","income":[{"source":"Зарплата Анны (Brightwave)","who":"Анна","amount":2100.0,"group":"Зарплата Анны"},{"source":"Зарплата Ивана (Tecnologías Norte)","who":"Иван","amount":1750.0,"group":"Зарплата Ивана"}],"expenses":[{"cat":"cafe","amount":182.36,"items":[{"label":"Cafe Camelia","amount":74.89},{"label":"Bar Del Pla","amount":40.72},{"label":"Pizzeria Bella Napoli","amount":35.55},{"label":"Restaurante La Pepita","amount":17.7},{"label":"Glovo","amount":13.5}]},{"cat":"fun","amount":116.08,"items":[{"label":"Decathlon","amount":73.0},{"label":"Cinesa Diagonal","amount":43.08}]},{"cat":"groceries","amount":426.17,"items":[{"label":"Fruiteria Sant Antoni","amount":127.12},{"label":"Mercadona Barcelona","amount":97.5},{"label":"Lidl Gracia","amount":78.36},{"label":"Condis","amount":62.45},{"label":"Bonpreu","amount":60.74}]},{"cat":"health","amount":110.75,"items":[{"label":"Clinica Dental Sonris","amount":85.0},{"label":"Farmacia Del Carmen","amount":25.75}]},{"cat":"hobby_m","amount":45.0,"items":[{"label":"Скалолазание","amount":45.0}]},{"cat":"hobby_s","amount":55.0,"items":[{"label":"Йога","amount":55.0}]},{"cat":"housing","amount":936.87,"items":[{"label":"Аренда квартиры","amount":850.0},{"label":"Электричество","amount":62.07},{"label":"Вода","amount":24.8}]},{"cat":"kids","amount":137.28,"items":[{"label":"Музыкальная школа","amount":62.0},{"label":"Бассейн","amount":45.0},{"label":"Игрушки","amount":30.28}]},{"cat":"other","amount":69.88,"items":[{"label":"Телефон и интернет","amount":44.9},{"label":"Netflix.Com","amount":13.99},{"label":"Spotify P2","amount":10.99}]},{"cat":"transport","amount":159.85,"items":[{"label":"Shell Ronda","amount":77.03},{"label":"Repsol Estacion","amount":50.53},{"label":"Tmb Metro Barcelona","amount":16.19},{"label":"Bsm Parking","amount":16.1}]}],"excluded":[],"notes":[],"events":[]},"2026-04":{"month":"2026-04","income":[{"source":"Зарплата Анны (Brightwave)","who":"Анна","amount":2100.0,"group":"Зарплата Анны"},{"source":"Зарплата Ивана (Tecnologías Norte)","who":"Иван","amount":1750.0,"group":"Зарплата Ивана"}],"expenses":[{"cat":"cafe","amount":193.25,"items":[{"label":"Pizzeria Bella Napoli","amount":46.28},{"label":"Cafe Camelia","amount":41.17},{"label":"Restaurante La Pepita","amount":37.94},{"label":"Glovo","amount":35.4},{"label":"Sushi Shop","amount":32.46}]},{"cat":"fun","amount":41.34,"items":[{"label":"Bowling Barcelona","amount":41.34}]},{"cat":"groceries","amount":450.12,"items":[{"label":"Mercadona Barcelona","amount":135.38},{"label":"Fruiteria Sant Antoni","amount":121.89},{"label":"Bonpreu","amount":111.84},{"label":"Lidl Gracia","amount":54.46},{"label":"Condis","amount":26.55}]},{"cat":"health","amount":13.39,"items":[{"label":"Farmacia Del Carmen","amount":13.39}]},{"cat":"hobby_m","amount":45.0,"items":[{"label":"Скалолазание","amount":45.0}]},{"cat":"hobby_s","amount":55.0,"items":[{"label":"Йога","amount":55.0}]},{"cat":"housing","amount":935.43,"items":[{"label":"Аренда квартиры","amount":850.0},{"label":"Электричество","amount":60.63},{"label":"Вода","amount":24.8}]},{"cat":"kids","amount":107.0,"items":[{"label":"Музыкальная школа","amount":62.0},{"label":"Бассейн","amount":45.0}]},{"cat":"other","amount":69.88,"items":[{"label":"Телефон и интернет","amount":44.9},{"label":"Netflix.Com","amount":13.99},{"label":"Spotify P2","amount":10.99}]},{"cat":"shopping","amount":1192.09,"items":[{"label":"Ноутбук","amount":1099.0},{"label":"Primark","amount":56.3},{"label":"Amazon Eu Sarl","amount":36.79}]},{"cat":"transport","amount":178.93,"items":[{"label":"Shell Ronda","amount":95.07},{"label":"Repsol Estacion","amount":51.91},{"label":"Tmb Metro Barcelona","amount":18.59},{"label":"Bsm Parking","amount":13.36}]},{"cat":"travel","amount":328.0,"items":[{"label":"Отпуск в Лиссабоне","amount":328.0}]}],"excluded":[],"notes":["Почти в ноль: плюс 241 €.","Купили ноутбук за 1 099 € и заранее билеты в Лиссабон (328 €)."],"events":[{"type":"big","title":"Ноутбук","amount":1099.0,"cat":"shopping","details":["22.04 · 1099.00 € · Карта Ивана · MEDIA MARKT BARCELONA | LAPTOP"]}]},"2026-05":{"month":"2026-05","income":[{"source":"Зарплата Анны (Brightwave)","who":"Анна","amount":2100.0,"group":"Зарплата Анны"},{"source":"Зарплата Ивана (Tecnologías Norte)","who":"Иван","amount":1750.0,"group":"Зарплата Ивана"}],"expenses":[{"cat":"cafe","amount":163.64,"items":[{"label":"Restaurante La Pepita","amount":72.75},{"label":"Sushi Shop","amount":51.45},{"label":"Bar Del Pla","amount":39.44}]},{"cat":"fun","amount":33.05,"items":[{"label":"Cinesa Diagonal","amount":33.05}]},{"cat":"groceries","amount":473.44,"items":[{"label":"Bonpreu","amount":178.62},{"label":"Lidl Gracia","amount":85.43},{"label":"Fruiteria Sant Antoni","amount":83.62},{"label":"Mercadona Barcelona","amount":73.7},{"label":"Condis","amount":52.07}]},{"cat":"health","amount":14.59,"items":[{"label":"Farmacia Del Carmen","amount":14.59}]},{"cat":"hobby_m","amount":45.0,"items":[{"label":"Скалолазание","amount":45.0}]},{"cat":"hobby_s","amount":55.0,"items":[{"label":"Йога","amount":55.0}]},{"cat":"housing","amount":927.33,"items":[{"label":"Аренда квартиры","amount":850.0},{"label":"Электричество","amount":52.53},{"label":"Вода","amount":24.8}]},{"cat":"kids","amount":107.0,"items":[{"label":"Музыкальная школа","amount":62.0},{"label":"Бассейн","amount":45.0}]},{"cat":"other","amount":69.88,"items":[{"label":"Телефон и интернет","amount":44.9},{"label":"Netflix.Com","amount":13.99},{"label":"Spotify P2","amount":10.99}]},{"cat":"shopping","amount":96.99,"items":[{"label":"Zara","amount":67.32},{"label":"Fnac","amount":29.67}]},{"cat":"transport","amount":159.69,"items":[{"label":"Repsol Estacion","amount":54.54},{"label":"Shell Ronda","amount":44.53},{"label":"Cepsa Diagonal","amount":36.06},{"label":"Tmb Metro Barcelona","amount":13.84},{"label":"Bsm Parking","amount":10.72}]}],"excluded":[{"title":"Командировка Ивана (возмещено)","amount":240.0,"kind":"exp","reason":"Работа","details":["06.05 · -240.00 € · Карта Ивана · HOTEL EXPRESS MADRID | WORK TRIP"]},{"title":"Командировка Ивана (возмещено) — возврат","amount":240.0,"kind":"inc","reason":"Работа","details":["12.05 · +240.00 € · Карта Анны · EXPENSE REFUND TECNOLOGIAS NORTE"]}],"notes":[],"events":[]},"2026-06":{"month":"2026-06","income":[{"source":"Зарплата Анны (Brightwave)","who":"Анна","amount":2100.0,"group":"Зарплата Анны"},{"source":"Зарплата Ивана (Tecnologías Norte)","who":"Иван","amount":1750.0,"group":"Зарплата Ивана"}],"expenses":[{"cat":"cafe","amount":157.25,"items":[{"label":"Glovo","amount":102.3},{"label":"Restaurante La Pepita","amount":31.28},{"label":"Sushi Shop","amount":23.67}]},{"cat":"fun","amount":73.05,"items":[{"label":"Decathlon","amount":49.67},{"label":"Cinesa Diagonal","amount":23.38}]},{"cat":"groceries","amount":418.64,"items":[{"label":"Condis","amount":134.1},{"label":"Bonpreu","amount":100.62},{"label":"Mercadona Barcelona","amount":80.31},{"label":"Fruiteria Sant Antoni","amount":78.67},{"label":"Lidl Gracia","amount":24.94}]},{"cat":"health","amount":10.21,"items":[{"label":"Farmacia Del Carmen","amount":10.21}]},{"cat":"hobby_m","amount":45.0,"items":[{"label":"Скалолазание","amount":45.0}]},{"cat":"hobby_s","amount":55.0,"items":[{"label":"Йога","amount":55.0}]},{"cat":"housing","amount":930.49,"items":[{"label":"Аренда квартиры","amount":850.0},{"label":"Электричество","amount":55.69},{"label":"Вода","amount":24.8}]},{"cat":"kids","amount":155.64,"items":[{"label":"Музыкальная школа","amount":62.0},{"label":"Игрушки","amount":48.64},{"label":"Бассейн","amount":45.0}]},{"cat":"other","amount":69.88,"items":[{"label":"Телефон и интернет","amount":44.9},{"label":"Netflix.Com","amount":13.99},{"label":"Spotify P2","amount":10.99}]},{"cat":"shopping","amount":23.77,"items":[{"label":"Zara","amount":23.77}]},{"cat":"transport","amount":164.61,"items":[{"label":"Repsol Estacion","amount":89.34},{"label":"Cepsa Diagonal","amount":42.52},{"label":"Bsm Parking","amount":18.53},{"label":"Tmb Metro Barcelona","amount":14.22}]},{"cat":"travel","amount":605.0,"items":[{"label":"Отпуск в Лиссабоне","amount":605.0}]}],"excluded":[],"notes":["Плюс 1,1 тыс. €.","Отпуск в Лиссабоне — 932 € вместе с билетами, купленными в апреле."],"events":[{"type":"trip","cat":"travel","title":"Отпуск в Лиссабоне","short":"Лиссабон","amount":933.0,"dates":"14.06–18.06","details":["7 операций с 05.04 по 18.06","Hotel Alfama Lisboa — 412.00 €","Vueling Airlines — 328.00 €","Oceanario Lisboa — 54.00 €","Restaurante O Bairro Lisboa — 46.50 €","Pingo Doce Lisboa — 38.20 €","Pasteis De Belem Lisboa — 31.90 €","Bolt Lisboa — 22.40 €"],"br":{"Жильё":412,"Билеты":374,"Покупки и прочее":86,"Еда":38,"Транспорт":22}}]},"2026-07":{"month":"2026-07","income":[{"source":"Зарплата Анны (Brightwave)","who":"Анна","amount":2100.0,"group":"Зарплата Анны"},{"source":"Зарплата Ивана (Tecnologías Norte)","who":"Иван","amount":1750.0,"group":"Зарплата Ивана"}],"expenses":[{"cat":"cafe","amount":187.82,"items":[{"label":"Sushi Shop","amount":63.48},{"label":"Cafe Camelia","amount":37.55},{"label":"Bar Del Pla","amount":36.25},{"label":"Pizzeria Bella Napoli","amount":31.22},{"label":"Glovo","amount":19.32}]},{"cat":"fun","amount":44.91,"items":[{"label":"Bowling Barcelona","amount":44.91}]},{"cat":"groceries","amount":422.31,"items":[{"label":"Mercadona Barcelona","amount":142.41},{"label":"Condis","amount":115.78},{"label":"Bonpreu","amount":95.46},{"label":"Fruiteria Sant Antoni","amount":47.23},{"label":"Lidl Gracia","amount":21.43}]},{"cat":"health","amount":8.47,"items":[]},{"cat":"hobby_m","amount":45.0,"items":[{"label":"Скалолазание","amount":45.0}]},{"cat":"hobby_s","amount":55.0,"items":[{"label":"Йога","amount":55.0}]},{"cat":"housing","amount":923.96,"items":[{"label":"Аренда квартиры","amount":850.0},{"label":"Электричество","amount":49.16},{"label":"Вода","amount":24.8}]},{"cat":"kids","amount":487.0,"items":[{"label":"Летний лагерь","amount":380.0},{"label":"Музыкальная школа","amount":62.0},{"label":"Бассейн","amount":45.0}]},{"cat":"other","amount":69.88,"items":[{"label":"Телефон и интернет","amount":44.9},{"label":"Netflix.Com","amount":13.99},{"label":"Spotify P2","amount":10.99}]},{"cat":"shopping","amount":94.23,"items":[{"label":"Primark","amount":51.99},{"label":"Amazon Eu Sarl","amount":42.24}]},{"cat":"transport","amount":160.57,"items":[{"label":"Shell Ronda","amount":84.75},{"label":"Repsol Estacion","amount":46.24},{"label":"Tmb Metro Barcelona","amount":14.91},{"label":"Bsm Parking","amount":14.67}]}],"excluded":[],"notes":[],"events":[{"type":"big","title":"Летний лагерь","amount":380.0,"cat":"kids","details":["08.07 · 120.00 € · Карта Ивана · CASAL ESTIU MONTJUIC","09.07 · 260.00 € · Общий счёт · CASAL ESTIU MONTJUIC"]}]},"2026-08":{"month":"2026-08","income":[{"source":"Зарплата Анны (Brightwave)","who":"Анна","amount":2100.0,"group":"Зарплата Анны"},{"source":"Зарплата Ивана (Tecnologías Norte)","who":"Иван","amount":1750.0,"group":"Зарплата Ивана"}],"expenses":[{"cat":"cafe","amount":140.55,"items":[{"label":"Glovo","amount":81.03},{"label":"Bar Del Pla","amount":30.63},{"label":"Pizzeria Bella Napoli","amount":28.89}]},{"cat":"fun","amount":111.64,"items":[{"label":"Decathlon","amount":90.54},{"label":"Zoo De Barcelona","amount":21.1}]},{"cat":"groceries","amount":395.86,"items":[{"label":"Condis","amount":137.0},{"label":"Mercadona Barcelona","amount":103.41},{"label":"Bonpreu","amount":61.35},{"label":"Lidl Gracia","amount":58.41},{"label":"Fruiteria Sant Antoni","amount":35.69}]},{"cat":"health","amount":24.03,"items":[{"label":"Farmacia Del Carmen","amount":24.03}]},{"cat":"hobby_m","amount":45.0,"items":[{"label":"Скалолазание","amount":45.0}]},{"cat":"hobby_s","amount":55.0,"items":[{"label":"Йога","amount":55.0}]},{"cat":"housing","amount":927.35,"items":[{"label":"Аренда квартиры","amount":850.0},{"label":"Электричество","amount":52.55},{"label":"Вода","amount":24.8}]},{"cat":"kids","amount":107.0,"items":[{"label":"Музыкальная школа","amount":62.0},{"label":"Бассейн","amount":45.0}]},{"cat":"other","amount":69.88,"items":[{"label":"Телефон и интернет","amount":44.9},{"label":"Netflix.Com","amount":13.99},{"label":"Spotify P2","amount":10.99}]},{"cat":"shopping","amount":95.0,"items":[{"label":"Подарки","amount":95.0}]},{"cat":"transport","amount":138.88,"items":[{"label":"Repsol Estacion","amount":75.89},{"label":"Shell Ronda","amount":39.85},{"label":"Tmb Metro Barcelona","amount":14.09}]}],"excluded":[],"notes":[],"events":[]},"2026-09":{"month":"2026-09","income":[{"source":"Зарплата Анны (Brightwave)","who":"Анна","amount":2100.0,"group":"Зарплата Анны"},{"source":"Зарплата Ивана (Tecnologías Norte)","who":"Иван","amount":1750.0,"group":"Зарплата Ивана"}],"expenses":[{"cat":"cafe","amount":197.08,"items":[{"label":"Glovo","amount":111.07},{"label":"Pizzeria Bella Napoli","amount":60.75},{"label":"Cafe Camelia","amount":25.26}]},{"cat":"fun","amount":67.08,"items":[{"label":"Decathlon","amount":36.05},{"label":"CosmoCaixa","amount":31.03}]},{"cat":"groceries","amount":406.57,"items":[{"label":"Condis","amount":132.46},{"label":"Fruiteria Sant Antoni","amount":93.75},{"label":"Mercadona Barcelona","amount":90.21},{"label":"Bonpreu","amount":90.15}]},{"cat":"health","amount":14.07,"items":[{"label":"Farmacia Del Carmen","amount":14.07}]},{"cat":"hobby_m","amount":190.0,"items":[{"label":"Скалолазание","amount":190.0}]},{"cat":"hobby_s","amount":55.0,"items":[{"label":"Йога","amount":55.0}]},{"cat":"housing","amount":936.23,"items":[{"label":"Аренда квартиры","amount":850.0},{"label":"Электричество","amount":61.43},{"label":"Вода","amount":24.8}]},{"cat":"kids","amount":286.61,"items":[{"label":"Школьные принадлежности","amount":142.3},{"label":"Музыкальная школа","amount":62.0},{"label":"Бассейн","amount":45.0},{"label":"Игрушки","amount":37.31}]},{"cat":"other","amount":69.88,"items":[{"label":"Телефон и интернет","amount":44.9},{"label":"Netflix.Com","amount":13.99},{"label":"Spotify P2","amount":10.99}]},{"cat":"shopping","amount":72.09,"items":[{"label":"Amazon Eu Sarl","amount":72.09}]},{"cat":"transport","amount":172.17,"items":[{"label":"Shell Ronda","amount":89.04},{"label":"Cepsa Diagonal","amount":55.26},{"label":"Tmb Metro Barcelona","amount":15.52},{"label":"Bsm Parking","amount":12.35}]}],"excluded":[],"notes":["Плюс 1,4 тыс. €.","Продукты — 440 €, чуть выше среднего: начало учебного года.","Школьные принадлежности — 142 €, разовая трата.","За 9 месяцев отложили 12,6 тыс. €: в среднем 1,4 тыс. € в месяц."],"events":[{"type":"big","title":"Школьные принадлежности","amount":142.3,"cat":"kids","details":["03.09 · 142.30 € · Общий счёт · ABACUS COOPERATIVA | MATERIAL ESCOLAR"]}]}},"tx":{"2026-03":[["01",2100.0,"income","Зарплата Анны (Brightwave)","Карта Анны","Salary"],["02",40.82,"cafe","Cafe Camelia","Карта Анны",""],["02",37.56,"groceries","Fruiteria Sant Antoni","Карта Анны",""],["02",30.08,"groceries","Bonpreu","Карта Анны",""],["02",16.19,"transport","Tmb Metro Barcelona","Карта Анны",""],["02",22.94,"groceries","Mercadona Barcelona","Карта Ивана",""],["02",13.5,"cafe","Glovo","Карта Ивана",""],["02",1750.0,"income","Зарплата Ивана (Tecnologías Norte)","Карта Ивана","Nomina Tecnologias Norte Sa"],["03",45.79,"groceries","Lidl Gracia","Карта Анны",""],["03",50.53,"transport","Repsol Estacion","Карта Ивана",""],["04",20.91,"groceries","Condis","Общий счёт",""],["05",30.66,"groceries","Bonpreu","Карта Ивана",""],["05",17.7,"cafe","Restaurante La Pepita","Карта Ивана",""],["05",850.0,"housing","Аренда квартиры","Общий счёт","Alquiler Piso C/ Mallorca"],["06",62.0,"kids","Музыкальная школа","Общий счёт","Escola De Musica Gracia"],["07",45.0,"kids","Бассейн","Общий счёт","Club Natacio Barcelona"],["08",23.75,"groceries","Fruiteria Sant Antoni","Карта Анны",""],["08",44.23,"groceries","Mercadona Barcelona","Карта Ивана",""],["08",41.54,"groceries","Condis","Карта Ивана",""],["08",16.1,"transport","Bsm Parking","Карта Ивана",""],["08",62.07,"housing","Электричество","Общий счёт","Endesa Energia"],["09",41.77,"fun","Decathlon","Карта Анны",""],["09",31.23,"fun","Decathlon","Карта Ивана",""],["09",24.8,"housing","Вода","Общий счёт","Aigues De Barcelona"],["10",85.0,"health","Clinica Dental Sonris","Карта Анны",""],["10",55.0,"hobby_s","Йога","Карта Анны","Yoga Shala Gracia"],["11",45.0,"hobby_m","Скалолазание","Карта Ивана","Santa Climbing Gym"],["11",43.08,"fun","Cinesa Diagonal","Карта Ивана",""],["12",44.9,"other","Телефон и интернет","Общий счёт","Digi Mobil Fibra"],["13",37.76,"transport","Shell Ronda","Карта Ивана",""],["14",25.75,"health","Farmacia Del Carmen","Карта Анны",""],["14",32.57,"groceries","Lidl Gracia","Общий счёт",""],["14",30.33,"groceries","Mercadona Barcelona","Общий счёт",""],["15",13.99,"other","Netflix.Com","Карта Анны",""],["16",10.99,"other","Spotify P2","Карта Ивана",""],["18",21.97,"groceries","Fruiteria Sant Antoni","Общий счёт",""],["19",34.07,"cafe","Cafe Camelia","Карта Анны",""],["20",30.28,"kids","Игрушки","Общий счёт","Juguettos"],["23",40.72,"cafe","Bar Del Pla","Карта Ивана",""],["26",43.84,"groceries","Fruiteria Sant Antoni","Карта Ивана",""],["26",35.55,"cafe","Pizzeria Bella Napoli","Карта Ивана",""],["28",39.27,"transport","Shell Ronda","Карта Ивана",""]],"2026-08":[["01",14.09,"transport","Tmb Metro Barcelona","Карта Анны",""],["01",2100.0,"income","Зарплата Анны (Brightwave)","Карта Анны","Salary"],["02",32.73,"fun","Decathlon","Карта Ивана",""],["02",1750.0,"income","Зарплата Ивана (Tecnologías Norte)","Карта Ивана","Nomina Tecnologias Norte Sa"],["03",57.81,"fun","Decathlon","Карта Ивана",""],["03",38.61,"transport","Repsol Estacion","Карта Ивана",""],["04",42.98,"groceries","Bonpreu","Общий счёт",""],["05",850.0,"housing","Аренда квартиры","Общий счёт","Alquiler Piso C/ Mallorca"],["06",62.0,"kids","Музыкальная школа","Общий счёт","Escola De Musica Gracia"],["07",45.0,"kids","Бассейн","Общий счёт","Club Natacio Barcelona"],["07",24.49,"groceries","Condis","Общий счёт",""],["08",15.55,"cafe","Glovo","Карта Анны",""],["08",52.55,"housing","Электричество","Общий счёт","Endesa Energia"],["09",46.23,"groceries","Condis","Карта Анны",""],["09",27.2,"groceries","Lidl Gracia","Карта Ивана",""],["09",24.8,"housing","Вода","Общий счёт","Aigues De Barcelona"],["09",19.37,"groceries","Mercadona Barcelona","Общий счёт",""],["10",55.0,"hobby_s","Йога","Карта Анны","Yoga Shala Gracia"],["10",37.8,"cafe","Glovo","Карта Ивана",""],["11",45.0,"hobby_m","Скалолазание","Карта Ивана","Santa Climbing Gym"],["12",44.9,"other","Телефон и интернет","Общий счёт","Digi Mobil Fibra"],["12",23.38,"groceries","Mercadona Barcelona","Общий счёт",""],["14",21.1,"fun","Zoo De Barcelona","Карта Анны",""],["15",13.99,"other","Netflix.Com","Карта Анны",""],["16",31.21,"groceries","Lidl Gracia","Карта Ивана",""],["16",10.99,"other","Spotify P2","Карта Ивана",""],["18",9.05,"transport","Bsm Parking","Карта Ивана",""],["19",36.88,"groceries","Mercadona Barcelona","Карта Анны",""],["19",30.63,"cafe","Bar Del Pla","Карта Ивана",""],["20",95.0,"shopping","Подарки","Карта Анны","Bizum Enviado"],["21",39.85,"transport","Shell Ronda","Карта Ивана",""],["23",24.03,"health","Farmacia Del Carmen","Карта Анны",""],["23",46.32,"groceries","Condis","Общий счёт",""],["24",23.78,"groceries","Mercadona Barcelona","Карта Анны",""],["24",37.28,"transport","Repsol Estacion","Карта Ивана",""],["24",35.69,"groceries","Fruiteria Sant Antoni","Общий счёт",""],["25",27.68,"cafe","Glovo","Карта Анны",""],["26",28.89,"cafe","Pizzeria Bella Napoli","Карта Анны",""],["27",19.96,"groceries","Condis","Карта Анны",""],["28",18.37,"groceries","Bonpreu","Карта Анны",""]],"2026-01":[["01",2100.0,"income","Зарплата Анны (Brightwave)","Карта Анны","Salary"],["02",1750.0,"income","Зарплата Ивана (Tecnologías Norte)","Карта Ивана","Nomina Tecnologias Norte Sa"],["03",29.4,"groceries","Bonpreu","Карта Анны",""],["05",25.15,"fun","Zoo De Barcelona","Карта Ивана",""],["05",850.0,"housing","Аренда квартиры","Общий счёт","Alquiler Piso C/ Mallorca"],["06",62.0,"kids","Музыкальная школа","Общий счёт","Escola De Musica Gracia"],["07",24.98,"groceries","Fruiteria Sant Antoni","Карта Анны",""],["07",56.05,"shopping","Primark","Карта Ивана",""],["07",45.0,"kids","Бассейн","Общий счёт","Club Natacio Barcelona"],["08",31.48,"groceries","Bonpreu","Карта Ивана",""],["08",61.18,"housing","Электричество","Общий счёт","Endesa Energia"],["09",24.8,"housing","Вода","Общий счёт","Aigues De Barcelona"],["09",22.66,"groceries","Bonpreu","Общий счёт",""],["10",55.0,"hobby_s","Йога","Карта Анны","Yoga Shala Gracia"],["11",45.0,"hobby_m","Скалолазание","Карта Ивана","Santa Climbing Gym"],["11",19.8,"transport","Bsm Parking","Карта Ивана",""],["12",18.29,"cafe","Pizzeria Bella Napoli","Карта Ивана",""],["12",44.9,"other","Телефон и интернет","Общий счёт","Digi Mobil Fibra"],["13",41.21,"transport","Shell Ronda","Карта Ивана",""],["13",34.73,"shopping","Amazon Eu Sarl","Карта Ивана",""],["15",13.99,"other","Netflix.Com","Карта Анны",""],["16",10.99,"other","Spotify P2","Карта Ивана",""],["18",26.8,"groceries","Fruiteria Sant Antoni","Карта Анны",""],["18",23.97,"groceries","Fruiteria Sant Antoni","Карта Анны",""],["18",21.74,"groceries","Condis","Карта Ивана",""],["19",30.66,"groceries","Mercadona Barcelona","Карта Анны",""],["19",23.77,"groceries","Mercadona Barcelona","Общий счёт",""],["20",31.05,"cafe","Bar Del Pla","Карта Анны",""],["20",260.0,"income","Продажа коляски","Карта Анны","Bizum Recibido"],["20",25.94,"groceries","Mercadona Barcelona","Общий счёт",""],["21",37.02,"cafe","Restaurante La Pepita","Карта Ивана",""],["23",47.81,"transport","Shell Ronda","Карта Ивана",""],["24",26.25,"groceries","Lidl Gracia","Карта Анны",""],["24",40.63,"transport","Cepsa Diagonal","Карта Ивана",""],["24",21.07,"groceries","Fruiteria Sant Antoni","Общий счёт",""],["25",42.17,"groceries","Condis","Карта Анны",""],["25",20.68,"cafe","Cafe Camelia","Карта Анны",""],["25",10.56,"transport","Tmb Metro Barcelona","Карта Анны",""],["27",8.87,"health","Farmacia Del Carmen","Карта Анны",""],["28",15.03,"cafe","Pizzeria Bella Napoli","Карта Анны",""]],"2026-02":[["01",23.88,"health","Farmacia Del Carmen","Карта Анны",""],["01",2100.0,"income","Зарплата Анны (Brightwave)","Карта Анны","Salary"],["01",46.61,"groceries","Bonpreu","Карта Ивана",""],["02",1750.0,"income","Зарплата Ивана (Tecnologías Norte)","Карта Ивана","Nomina Tecnologias Norte Sa"],["03",40.67,"groceries","Mercadona Barcelona","Карта Ивана",""],["03",31.88,"fun","Bowling Barcelona","Карта Ивана",""],["04",26.81,"groceries","Lidl Gracia","Общий счёт",""],["05",31.79,"cafe","Bar Del Pla","Карта Анны",""],["05",850.0,"housing","Аренда квартиры","Общий счёт","Alquiler Piso C/ Mallorca"],["05",29.22,"groceries","Lidl Gracia","Общий счёт",""],["06",62.0,"kids","Музыкальная школа","Общий счёт","Escola De Musica Gracia"],["07",39.87,"cafe","Sushi Shop","Карта Ивана",""],["07",45.0,"kids","Бассейн","Общий счёт","Club Natacio Barcelona"],["08",38.34,"cafe","Cafe Camelia","Карта Анны",""],["08",23.71,"shopping","Zara","Карта Анны",""],["08",10.64,"transport","Tmb Metro Barcelona","Карта Анны",""],["08",64.35,"housing","Электричество","Общий счёт","Endesa Energia"],["09",27.83,"cafe","Bar Del Pla","Карта Анны",""],["09",24.8,"housing","Вода","Общий счёт","Aigues De Barcelona"],["10",55.0,"hobby_s","Йога","Карта Анны","Yoga Shala Gracia"],["11",45.0,"hobby_m","Скалолазание","Карта Ивана","Santa Climbing Gym"],["12",44.36,"groceries","Bonpreu","Карта Анны",""],["12",45.08,"transport","Shell Ronda","Карта Ивана",""],["12",24.58,"groceries","Lidl Gracia","Карта Ивана",""],["12",44.9,"other","Телефон и интернет","Общий счёт","Digi Mobil Fibra"],["13",189.0,"travel","Выходные в Вал-де-Нурия","Карта Анны","Renfe Viajeros"],["13",29.45,"groceries","Condis","Карта Анны",""],["13",57.89,"transport","Shell Ronda","Карта Ивана",""],["14",176.0,"travel","Выходные в Вал-де-Нурия","Карта Анны","Hotel Vall De Nuria"],["15",13.99,"other","Netflix.Com","Карта Анны",""],["15",58.0,"travel","Выходные в Вал-де-Нурия","Карта Ивана","Restaurante Vall De Nuria"],["15",9.69,"transport","Bsm Parking","Карта Ивана",""],["16",10.99,"other","Spotify P2","Карта Ивана",""],["17",45.38,"groceries","Bonpreu","Общий счёт",""],["18",43.82,"groceries","Mercadona Barcelona","Общий счёт",""],["19",32.11,"shopping","Zara","Карта Анны",""],["20",27.72,"groceries","Mercadona Barcelona","Карта Анны",""],["21",22.8,"groceries","Condis","Общий счёт",""],["22",44.54,"groceries","Bonpreu","Карта Анны",""],["23",39.63,"transport","Cepsa Diagonal","Карта Ивана",""],["24",26.58,"cafe","Cafe Camelia","Карта Анны",""],["24",35.54,"groceries","Fruiteria Sant Antoni","Общий счёт",""]],"2026-06":[["01",2100.0,"income","Зарплата Анны (Brightwave)","Карта Анны","Salary"],["01",23.67,"cafe","Sushi Shop","Карта Ивана",""],["02",1750.0,"income","Зарплата Ивана (Tecnologías Norte)","Карта Ивана","Nomina Tecnologias Norte Sa"],["03",31.28,"cafe","Restaurante La Pepita","Карта Анны",""],["03",30.45,"groceries","Bonpreu","Общий счёт",""],["05",850.0,"housing","Аренда квартиры","Общий счёт","Alquiler Piso C/ Mallorca"],["05",24.94,"groceries","Lidl Gracia","Общий счёт",""],["06",62.0,"kids","Музыкальная школа","Общий счёт","Escola De Musica Gracia"],["07",45.0,"kids","Бассейн","Общий счёт","Club Natacio Barcelona"],["08",23.38,"fun","Cinesa Diagonal","Карта Анны",""],["08",55.69,"housing","Электричество","Общий счёт","Endesa Energia"],["09",43.72,"transport","Repsol Estacion","Карта Ивана",""],["09",18.53,"transport","Bsm Parking","Карта Ивана",""],["09",24.8,"housing","Вода","Общий счёт","Aigues De Barcelona"],["10",55.0,"hobby_s","Йога","Карта Анны","Yoga Shala Gracia"],["11",45.0,"hobby_m","Скалолазание","Карта Ивана","Santa Climbing Gym"],["11",44.79,"groceries","Mercadona Barcelona","Общий счёт",""],["12",44.9,"other","Телефон и интернет","Общий счёт","Digi Mobil Fibra"],["14",412.0,"travel","Отпуск в Лиссабоне","Карта Анны","Hotel Alfama Lisboa"],["14",19.87,"groceries","Condis","Карта Ивана",""],["15",13.99,"other","Netflix.Com","Карта Анны",""],["15",46.5,"travel","Отпуск в Лиссабоне","Карта Ивана","Restaurante O Bairro Lisboa"],["15",42.52,"transport","Cepsa Diagonal","Карта Ивана",""],["16",22.4,"travel","Отпуск в Лиссабоне","Карта Анны","Bolt Lisboa"],["16",18.58,"cafe","Glovo","Карта Анны",""],["16",38.2,"travel","Отпуск в Лиссабоне","Карта Ивана","Pingo Doce Lisboa"],["16",18.18,"groceries","Bonpreu","Карта Ивана",""],["16",10.99,"other","Spotify P2","Карта Ивана",""],["17",54.0,"travel","Отпуск в Лиссабоне","Карта Анны","Oceanario Lisboa"],["18",31.9,"travel","Отпуск в Лиссабоне","Карта Ивана","Pasteis De Belem Lisboa"],["20",28.02,"cafe","Glovo","Карта Анны",""],["20",48.64,"kids","Игрушки","Общий счёт","Juguettos"],["21",23.77,"shopping","Zara","Карта Анны",""],["21",25.18,"groceries","Condis","Карта Ивана",""],["22",33.93,"groceries","Fruiteria Sant Antoni","Карта Ивана",""],["23",26.57,"groceries","Bonpreu","Карта Анны",""],["24",49.67,"fun","Decathlon","Карта Анны",""],["24",16.95,"cafe","Glovo","Карта Ивана",""],["24",43.84,"groceries","Condis","Общий счёт",""],["25",35.52,"groceries","Mercadona Barcelona","Карта Ивана",""],["25",44.74,"groceries","Fruiteria Sant Antoni","Общий счёт",""],["25",25.42,"groceries","Bonpreu","Общий счёт",""],["27",14.22,"transport","Tmb Metro Barcelona","Карта Анны",""],["27",10.21,"health","Farmacia Del Carmen","Карта Анны",""],["27",45.21,"groceries","Condis","Карта Ивана",""],["28",45.62,"transport","Repsol Estacion","Карта Ивана",""],["28",38.75,"cafe","Glovo","Карта Ивана",""]],"2026-04":[["01",56.3,"shopping","Primark","Карта Анны",""],["01",28.01,"groceries","Lidl Gracia","Карта Анны",""],["01",2100.0,"income","Зарплата Анны (Brightwave)","Карта Анны","Salary"],["01",17.38,"cafe","Pizzeria Bella Napoli","Карта Ивана",""],["02",18.59,"transport","Tmb Metro Barcelona","Карта Анны",""],["02",1750.0,"income","Зарплата Ивана (Tecnologías Norte)","Карта Ивана","Nomina Tecnologias Norte Sa"],["03",34.13,"groceries","Fruiteria Sant Antoni","Карта Анны",""],["04",13.36,"transport","Bsm Parking","Карта Ивана",""],["05",328.0,"travel","Отпуск в Лиссабоне","Карта Анны","Vueling Airlines"],["05",25.93,"groceries","Mercadona Barcelona","Карта Анны",""],["05",850.0,"housing","Аренда квартиры","Общий счёт","Alquiler Piso C/ Mallorca"],["05",46.0,"groceries","Mercadona Barcelona","Общий счёт",""],["06",62.0,"kids","Музыкальная школа","Общий счёт","Escola De Musica Gracia"],["06",40.24,"groceries","Fruiteria Sant Antoni","Общий счёт",""],["07",32.46,"cafe","Sushi Shop","Карта Ивана",""],["07",45.0,"kids","Бассейн","Общий счёт","Club Natacio Barcelona"],["07",38.62,"groceries","Bonpreu","Общий счёт",""],["08",37.94,"cafe","Restaurante La Pepita","Карта Анны",""],["08",13.39,"health","Farmacia Del Carmen","Карта Анны",""],["08",60.63,"housing","Электричество","Общий счёт","Endesa Energia"],["09",45.16,"groceries","Mercadona Barcelona","Карта Ивана",""],["09",41.34,"fun","Bowling Barcelona","Карта Ивана",""],["09",38.66,"transport","Shell Ronda","Карта Ивана",""],["09",26.45,"groceries","Lidl Gracia","Общий счёт",""],["09",24.8,"housing","Вода","Общий счёт","Aigues De Barcelona"],["10",55.0,"hobby_s","Йога","Карта Анны","Yoga Shala Gracia"],["11",45.0,"hobby_m","Скалолазание","Карта Ивана","Santa Climbing Gym"],["12",35.4,"cafe","Glovo","Карта Анны",""],["12",36.79,"shopping","Amazon Eu Sarl","Карта Ивана",""],["12",44.9,"other","Телефон и интернет","Общий счёт","Digi Mobil Fibra"],["12",26.55,"groceries","Condis","Общий счёт",""],["14",15.82,"cafe","Pizzeria Bella Napoli","Карта Анны",""],["15",13.99,"other","Netflix.Com","Карта Анны",""],["16",10.99,"other","Spotify P2","Карта Ивана",""],["18",13.08,"cafe","Pizzeria Bella Napoli","Карта Анны",""],["18",18.29,"groceries","Mercadona Barcelona","Карта Ивана",""],["20",47.52,"groceries","Fruiteria Sant Antoni","Общий счёт",""],["21",30.71,"groceries","Bonpreu","Карта Анны",""],["22",42.51,"groceries","Bonpreu","Карта Анны",""],["22",1099.0,"shopping","Ноутбук","Карта Ивана","Media Markt Barcelona"],["26",56.41,"transport","Shell Ronda","Карта Ивана",""],["26",41.17,"cafe","Cafe Camelia","Карта Ивана",""],["28",51.91,"transport","Repsol Estacion","Карта Ивана",""]],"2026-05":[["01",2100.0,"income","Зарплата Анны (Brightwave)","Карта Анны","Salary"],["01",36.06,"transport","Cepsa Diagonal","Карта Ивана",""],["01",21.46,"groceries","Bonpreu","Общий счёт",""],["02",33.05,"fun","Cinesa Diagonal","Карта Ивана",""],["02",1750.0,"income","Зарплата Ивана (Tecnologías Norte)","Карта Ивана","Nomina Tecnologias Norte Sa"],["02",39.26,"groceries","Mercadona Barcelona","Общий счёт",""],["03",36.55,"cafe","Restaurante La Pepita","Карта Ивана",""],["04",35.9,"groceries","Bonpreu","Карта Анны",""],["05",850.0,"housing","Аренда квартиры","Общий счёт","Alquiler Piso C/ Mallorca"],["06",240.0,"excluded","Командировка Ивана (возмещено)","Карта Ивана","Hotel Express Madrid"],["06",62.0,"kids","Музыкальная школа","Общий счёт","Escola De Musica Gracia"],["07",24.9,"cafe","Bar Del Pla","Карта Ивана",""],["07",45.0,"kids","Бассейн","Общий счёт","Club Natacio Barcelona"],["08",36.2,"cafe","Restaurante La Pepita","Карта Ивана",""],["08",29.67,"shopping","Fnac","Карта Ивана",""],["08",52.53,"housing","Электричество","Общий счёт","Endesa Energia"],["09",24.8,"housing","Вода","Общий счёт","Aigues De Barcelona"],["10",55.0,"hobby_s","Йога","Карта Анны","Yoga Shala Gracia"],["11",45.0,"hobby_m","Скалолазание","Карта Ивана","Santa Climbing Gym"],["12",-240.0,"excluded","Командировка Ивана (возмещено)","Карта Анны","Expense Refund Tecnologias Norte"],["12",44.9,"other","Телефон и интернет","Общий счёт","Digi Mobil Fibra"],["12",30.94,"groceries","Bonpreu","Общий счёт",""],["13",44.99,"groceries","Lidl Gracia","Карта Анны",""],["13",14.59,"health","Farmacia Del Carmen","Карта Анны",""],["13",34.44,"groceries","Mercadona Barcelona","Общий счёт",""],["14",36.19,"groceries","Fruiteria Sant Antoni","Общий счёт",""],["15",13.99,"other","Netflix.Com","Карта Анны",""],["15",44.53,"transport","Shell Ronda","Карта Ивана",""],["15",25.25,"cafe","Sushi Shop","Карта Ивана",""],["16",10.99,"other","Spotify P2","Карта Ивана",""],["17",26.2,"cafe","Sushi Shop","Карта Анны",""],["18",21.82,"groceries","Condis","Общий счёт",""],["19",10.72,"transport","Bsm Parking","Карта Ивана",""],["19",46.88,"groceries","Bonpreu","Общий счёт",""],["20",54.54,"transport","Repsol Estacion","Карта Ивана",""],["22",14.54,"cafe","Bar Del Pla","Карта Анны",""],["22",47.43,"groceries","Fruiteria Sant Antoni","Карта Ивана",""],["22",40.44,"groceries","Lidl Gracia","Карта Ивана",""],["22",43.44,"groceries","Bonpreu","Общий счёт",""],["22",30.25,"groceries","Condis","Общий счёт",""],["23",13.84,"transport","Tmb Metro Barcelona","Карта Анны",""],["25",67.32,"shopping","Zara","Карта Анны",""]],"2026-09":[["01",15.52,"transport","Tmb Metro Barcelona","Карта Анны",""],["01",2100.0,"income","Зарплата Анны (Brightwave)","Карта Анны","Salary"],["02",17.63,"cafe","Pizzeria Bella Napoli","Карта Ивана",""],["02",1750.0,"income","Зарплата Ивана (Tecnologías Norte)","Карта Ивана","Nomina Tecnologias Norte Sa"],["03",14.07,"health","Farmacia Del Carmen","Карта Анны",""],["03",35.94,"groceries","Condis","Карта Ивана",""],["03",142.3,"kids","Школьные принадлежности","Общий счёт","Abacus Cooperativa"],["04",41.11,"cafe","Glovo","Карта Ивана",""],["04",35.66,"transport","Shell Ronda","Карта Ивана",""],["05",850.0,"housing","Аренда квартиры","Общий счёт","Alquiler Piso C/ Mallorca"],["06",12.35,"transport","Bsm Parking","Карта Ивана",""],["06",62.0,"kids","Музыкальная школа","Общий счёт","Escola De Musica Gracia"],["07",45.0,"kids","Бассейн","Общий счёт","Club Natacio Barcelona"],["08",61.43,"housing","Электричество","Общий счёт","Endesa Energia"],["09",28.48,"cafe","Pizzeria Bella Napoli","Карта Анны",""],["09",33.01,"groceries","Condis","Карта Ивана",""],["09",23.44,"groceries","Fruiteria Sant Antoni","Карта Ивана",""],["09",24.8,"housing","Вода","Общий счёт","Aigues De Barcelona"],["10",55.0,"hobby_s","Йога","Карта Анны","Yoga Shala Gracia"],["10",31.88,"cafe","Glovo","Карта Ивана",""],["11",45.0,"hobby_m","Скалолазание","Карта Ивана","Santa Climbing Gym"],["12",30.25,"groceries","Bonpreu","Карта Ивана",""],["12",44.9,"other","Телефон и интернет","Общий счёт","Digi Mobil Fibra"],["14",145.0,"hobby_m","Скалолазание","Карта Ивана","Barna Climbing Shop"],["15",72.09,"shopping","Amazon Eu Sarl","Карта Анны",""],["15",14.64,"cafe","Pizzeria Bella Napoli","Карта Анны",""],["15",13.99,"other","Netflix.Com","Карта Анны",""],["15",55.26,"transport","Cepsa Diagonal","Карта Ивана",""],["15",21.73,"groceries","Bonpreu","Общий счёт",""],["16",10.99,"other","Spotify P2","Карта Ивана",""],["20",53.38,"transport","Shell Ronda","Карта Ивана",""],["20",37.31,"kids","Игрушки","Общий счёт","Juguettos"],["20",25.51,"groceries","Mercadona Barcelona","Общий счёт",""],["21",42.43,"groceries","Mercadona Barcelona","Карта Ивана",""],["21",25.26,"cafe","Cafe Camelia","Карта Ивана",""],["22",38.08,"cafe","Glovo","Карта Анны",""],["22",43.08,"groceries","Fruiteria Sant Antoni","Общий счёт",""],["23",36.05,"fun","Decathlon","Карта Ивана",""],["25",40.69,"groceries","Condis","Карта Анны",""],["25",38.17,"groceries","Bonpreu","Карта Анны",""],["26",27.23,"groceries","Fruiteria Sant Antoni","Общий счёт",""],["27",31.03,"fun","CosmoCaixa","Карта Ивана","Cosmocaixa"],["27",22.27,"groceries","Mercadona Barcelona","Общий счёт",""],["28",22.82,"groceries","Condis","Карта Анны",""]],"2026-07":[["01",2100.0,"income","Зарплата Анны (Brightwave)","Карта Анны","Salary"],["02",1750.0,"income","Зарплата Ивана (Tecnologías Norte)","Карта Ивана","Nomina Tecnologias Norte Sa"],["04",38.92,"groceries","Bonpreu","Общий счёт",""],["05",850.0,"housing","Аренда квартиры","Общий счёт","Alquiler Piso C/ Mallorca"],["06",62.0,"kids","Музыкальная школа","Общий счёт","Escola De Musica Gracia"],["07",36.97,"transport","Shell Ronda","Карта Ивана",""],["07",45.0,"kids","Бассейн","Общий счёт","Club Natacio Barcelona"],["08",120.0,"kids","Летний лагерь","Карта Ивана","Casal Estiu Montjuic"],["08",42.24,"shopping","Amazon Eu Sarl","Карта Ивана",""],["08",49.16,"housing","Электричество","Общий счёт","Endesa Energia"],["09",47.78,"transport","Shell Ronda","Карта Ивана",""],["09",38.41,"cafe","Sushi Shop","Карта Ивана",""],["09",260.0,"kids","Летний лагерь","Общий счёт","Casal Estiu Montjuic"],["09",24.8,"housing","Вода","Общий счёт","Aigues De Barcelona"],["10",55.0,"hobby_s","Йога","Карта Анны","Yoga Shala Gracia"],["10",21.24,"groceries","Mercadona Barcelona","Общий счёт",""],["11",45.0,"hobby_m","Скалолазание","Карта Ивана","Santa Climbing Gym"],["11",37.55,"cafe","Cafe Camelia","Карта Ивана",""],["11",12.86,"cafe","Pizzeria Bella Napoli","Карта Ивана",""],["12",44.9,"other","Телефон и интернет","Общий счёт","Digi Mobil Fibra"],["14",46.24,"transport","Repsol Estacion","Карта Ивана",""],["14",44.91,"fun","Bowling Barcelona","Карта Ивана",""],["14",23.28,"groceries","Fruiteria Sant Antoni","Общий счёт",""],["15",13.99,"other","Netflix.Com","Карта Анны",""],["15",25.07,"cafe","Sushi Shop","Карта Ивана",""],["15",19.32,"cafe","Glovo","Карта Ивана",""],["16",18.36,"cafe","Pizzeria Bella Napoli","Карта Анны",""],["16",10.99,"other","Spotify P2","Карта Ивана",""],["17",37.43,"groceries","Mercadona Barcelona","Карта Анны",""],["18",30.85,"groceries","Bonpreu","Общий счёт",""],["19",38.32,"groceries","Condis","Общий счёт",""],["20",36.25,"cafe","Bar Del Pla","Карта Ивана",""],["20",36.22,"groceries","Mercadona Barcelona","Общий счёт",""],["21",44.75,"groceries","Condis","Общий счёт",""],["22",51.99,"shopping","Primark","Карта Ивана",""],["22",21.43,"groceries","Lidl Gracia","Карта Ивана",""],["23",14.91,"transport","Tmb Metro Barcelona","Карта Анны",""],["23",25.69,"groceries","Bonpreu","Карта Ивана",""],["23",23.95,"groceries","Fruiteria Sant Antoni","Карта Ивана",""],["23",14.67,"transport","Bsm Parking","Карта Ивана",""],["26",47.52,"groceries","Mercadona Barcelona","Карта Анны",""],["26",8.47,"health","Farmacia Del Carmen","Карта Анны",""],["27",32.71,"groceries","Condis","Карта Ивана",""]]},"review":[{"id":"decathlon","order":2,"title":"Decathlon","amount":249,"count":6,"months":["2026-02","2026-04","2026-06","2026-09"],"current":"shopping","suggest":"fun","question":"Это спортивная одежда для всех или снаряжение для скалолазания Ивана?","src":["Decathlon — 6 покупок за год"],"status":"open"},{"id":"bizum-gift","order":1,"title":"Bizum: подарок на день рождения","amount":95,"count":1,"months":["2026-08"],"current":"shopping","suggest":"shopping","question":"Это подарок Лусии — оставить в «Покупках» или завести отдельную статью «Подарки»?","src":["20.08 · 95.00 € · Карта Анны · BIZUM ENVIADO | REGALO CUMPLE LUCIA"],"status":"open"}],"accounts":{"year":"2026","accounts":[{"id":"acc1","name":"Карта Анны","months":{"2026-01":{"inc":2360.0,"exp":359.41,"tin":0.0,"tout":700.0,"xl":0.0,"cats":{"cafe":66.76,"groceries":204.23,"health":8.87,"hobby_s":55.0,"other":13.99,"transport":10.56},"top":[["Fruiteria Sant Antoni",75.75],["Йога",55.0],["Condis",42.17],["Bar Del Pla",31.05],["Mercadona Barcelona",30.66]],"start":3200.0,"end":4500.59,"diff":-0.0},"2026-02":{"inc":2100.0,"exp":794.94,"tin":0.0,"tout":700.0,"xl":0.0,"cats":{"cafe":124.54,"groceries":146.07,"health":23.88,"hobby_s":55.0,"other":13.99,"shopping":55.82,"transport":10.64,"travel":365.0},"top":[["Выходные в Вал-де-Нурия",365.0],["Bonpreu",88.9],["Cafe Camelia",64.92],["Bar Del Pla",59.62],["Zara",55.82]],"start":4500.59,"end":5105.65,"diff":-0.0},"2026-03":{"inc":2100.0,"exp":449.77,"tin":0.0,"tout":700.0,"xl":0.0,"cats":{"cafe":74.89,"fun":41.77,"groceries":137.18,"health":110.75,"hobby_s":55.0,"other":13.99,"transport":16.19},"top":[["Clinica Dental Sonris",85.0],["Cafe Camelia",74.89],["Fruiteria Sant Antoni",61.31],["Йога",55.0],["Lidl Gracia",45.79]],"start":5105.65,"end":6055.88,"diff":0.0},"2026-04":{"inc":2100.0,"exp":748.8,"tin":0.0,"tout":700.0,"xl":0.0,"cats":{"cafe":102.24,"groceries":161.29,"health":13.39,"hobby_s":55.0,"other":13.99,"shopping":56.3,"transport":18.59,"travel":328.0},"top":[["Отпуск в Лиссабоне",328.0],["Bonpreu",73.22],["Primark",56.3],["Йога",55.0],["Restaurante La Pepita",37.94]],"start":6055.88,"end":6707.08,"diff":0.0},"2026-05":{"inc":2100.0,"exp":286.37,"tin":0.0,"tout":700.0,"xl":240.0,"cats":{"cafe":40.74,"groceries":80.89,"health":14.59,"hobby_s":55.0,"other":13.99,"shopping":67.32,"transport":13.84},"top":[["Zara",67.32],["Йога",55.0],["Lidl Gracia",44.99],["Bonpreu",35.9],["Sushi Shop",26.2]],"start":6707.08,"end":8060.71,"diff":0.0},"2026-06":{"inc":2100.0,"exp":783.09,"tin":0.0,"tout":700.0,"xl":0.0,"cats":{"cafe":77.88,"fun":73.05,"groceries":26.57,"health":10.21,"hobby_s":55.0,"other":13.99,"shopping":23.77,"transport":14.22,"travel":488.4},"top":[["Отпуск в Лиссабоне",488.4],["Йога",55.0],["Decathlon",49.67],["Glovo",46.6],["Restaurante La Pepita",31.28]],"start":8060.71,"end":8677.62,"diff":0.0},"2026-07":{"inc":2100.0,"exp":195.68,"tin":0.0,"tout":700.0,"xl":0.0,"cats":{"cafe":18.36,"groceries":84.95,"health":8.47,"hobby_s":55.0,"other":13.99,"transport":14.91},"top":[["Mercadona Barcelona",84.95],["Йога",55.0],["Pizzeria Bella Napoli",18.36],["Tmb Metro Barcelona",14.91],["Netflix.Com",13.99]],"start":8677.62,"end":9881.94,"diff":-0.0},"2026-08":{"inc":2100.0,"exp":440.55,"tin":0.0,"tout":700.0,"xl":0.0,"cats":{"cafe":72.12,"fun":21.1,"groceries":145.22,"health":24.03,"hobby_s":55.0,"other":13.99,"shopping":95.0,"transport":14.09},"top":[["Подарки",95.0],["Condis",66.19],["Mercadona Barcelona",60.66],["Йога",55.0],["Glovo",43.23]],"start":9881.94,"end":10841.39,"diff":-0.0},"2026-09":{"inc":2100.0,"exp":353.55,"tin":0.0,"tout":700.0,"xl":0.0,"cats":{"cafe":81.2,"groceries":101.68,"health":14.07,"hobby_s":55.0,"other":13.99,"shopping":72.09,"transport":15.52},"top":[["Amazon Eu Sarl",72.09],["Condis",63.51],["Йога",55.0],["Pizzeria Bella Napoli",43.12],["Bonpreu",38.17]],"start":10841.39,"end":11887.84,"diff":0.0}},"owner":"Анна"},{"id":"acc2","name":"Карта Ивана","months":{"2026-01":{"inc":1750.0,"exp":429.9,"tin":0.0,"tout":600.0,"xl":0.0,"cats":{"cafe":55.31,"fun":25.15,"groceries":53.22,"hobby_m":45.0,"other":10.99,"shopping":90.78,"transport":149.45},"top":[["Shell Ronda",89.02],["Primark",56.05],["Скалолазание",45.0],["Cepsa Diagonal",40.63],["Restaurante La Pepita",37.02]],"start":1800.0,"end":2520.1,"diff":0.0},"2026-02":{"inc":1750.0,"exp":449.89,"tin":0.0,"tout":600.0,"xl":0.0,"cats":{"cafe":39.87,"fun":31.88,"groceries":111.86,"hobby_m":45.0,"other":10.99,"transport":152.29,"travel":58.0},"top":[["Shell Ronda",102.97],["Выходные в Вал-де-Нурия",58.0],["Bonpreu",46.61],["Скалолазание",45.0],["Mercadona Barcelona",40.67]],"start":2520.1,"end":3220.21,"diff":0.0},"2026-03":{"inc":1750.0,"exp":564.64,"tin":0.0,"tout":600.0,"xl":0.0,"cats":{"cafe":107.47,"fun":74.31,"groceries":183.21,"hobby_m":45.0,"other":10.99,"transport":143.66},"top":[["Shell Ronda",77.03],["Mercadona Barcelona",67.17],["Repsol Estacion",50.53],["Скалолазание",45.0],["Fruiteria Sant Antoni",43.84]],"start":3220.21,"end":3805.57,"diff":0.0},"2026-04":{"inc":1750.0,"exp":1547.92,"tin":0.0,"tout":600.0,"xl":0.0,"cats":{"cafe":91.01,"fun":41.34,"groceries":63.45,"hobby_m":45.0,"other":10.99,"shopping":1135.79,"transport":160.34},"top":[["Ноутбук",1099.0],["Shell Ronda",95.07],["Mercadona Barcelona",63.45],["Repsol Estacion",51.91],["Скалолазание",45.0]],"start":3805.57,"end":3407.65,"diff":-0.0},"2026-05":{"inc":1750.0,"exp":475.33,"tin":0.0,"tout":600.0,"xl":-240.0,"cats":{"cafe":122.9,"fun":33.05,"groceries":87.87,"hobby_m":45.0,"other":10.99,"shopping":29.67,"transport":145.85},"top":[["Restaurante La Pepita",72.75],["Repsol Estacion",54.54],["Fruiteria Sant Antoni",47.43],["Скалолазание",45.0],["Shell Ronda",44.53]],"start":3407.65,"end":3842.32,"diff":-0.0},"2026-06":{"inc":1750.0,"exp":580.24,"tin":0.0,"tout":600.0,"xl":0.0,"cats":{"cafe":79.37,"groceries":177.89,"hobby_m":45.0,"other":10.99,"transport":150.39,"travel":116.6},"top":[["Отпуск в Лиссабоне",116.6],["Condis",90.26],["Repsol Estacion",89.34],["Glovo",55.7],["Скалолазание",45.0]],"start":3842.32,"end":4412.08,"diff":-0.0},"2026-07":{"inc":1750.0,"exp":734.03,"tin":0.0,"tout":600.0,"xl":0.0,"cats":{"cafe":169.46,"fun":44.91,"groceries":103.78,"hobby_m":45.0,"kids":120.0,"other":10.99,"shopping":94.23,"transport":145.66},"top":[["Летний лагерь",120.0],["Shell Ronda",84.75],["Sushi Shop",63.48],["Primark",51.99],["Repsol Estacion",46.24]],"start":4412.08,"end":4828.05,"diff":0.0},"2026-08":{"inc":1750.0,"exp":398.16,"tin":0.0,"tout":600.0,"xl":0.0,"cats":{"cafe":68.43,"fun":90.54,"groceries":58.41,"hobby_m":45.0,"other":10.99,"transport":124.79},"top":[["Decathlon",90.54],["Repsol Estacion",75.89],["Lidl Gracia",58.41],["Скалолазание",45.0],["Shell Ronda",39.85]],"start":4828.05,"end":5579.89,"diff":0.0},"2026-09":{"inc":1750.0,"exp":705.67,"tin":0.0,"tout":600.0,"xl":0.0,"cats":{"cafe":115.88,"fun":67.08,"groceries":165.07,"hobby_m":190.0,"other":10.99,"transport":156.65},"top":[["Скалолазание",190.0],["Shell Ronda",89.04],["Glovo",72.99],["Condis",68.95],["Cepsa Diagonal",55.26]],"start":5579.89,"end":6024.22,"diff":0.0}},"owner":"Иван"},{"id":"acc3","name":"Общий счёт","months":{"2026-01":{"inc":0.0,"exp":1181.32,"tin":1300.0,"tout":-0.0,"xl":0.0,"cats":{"groceries":93.44,"housing":935.98,"kids":107.0,"other":44.9},"top":[["Аренда квартиры",850.0],["Музыкальная школа",62.0],["Электричество",61.18],["Mercadona Barcelona",49.71],["Бассейн",45.0]],"start":900.0,"end":1018.68,"diff":-0.0},"2026-02":{"inc":0.0,"exp":1294.62,"tin":1300.0,"tout":-0.0,"xl":0.0,"cats":{"groceries":203.57,"housing":939.15,"kids":107.0,"other":44.9},"top":[["Аренда квартиры",850.0],["Электричество",64.35],["Музыкальная школа",62.0],["Lidl Gracia",56.03],["Bonpreu",45.38]],"start":1018.68,"end":1024.06,"diff":-0.0},"2026-03":{"inc":0.0,"exp":1224.83,"tin":1300.0,"tout":-0.0,"xl":0.0,"cats":{"groceries":105.78,"housing":936.87,"kids":137.28,"other":44.9},"top":[["Аренда квартиры",850.0],["Электричество",62.07],["Музыкальная школа",62.0],["Бассейн",45.0],["Телефон и интернет",44.9]],"start":1024.06,"end":1099.23,"diff":0.0},"2026-04":{"inc":0.0,"exp":1312.71,"tin":1300.0,"tout":-0.0,"xl":0.0,"cats":{"groceries":225.38,"housing":935.43,"kids":107.0,"other":44.9},"top":[["Аренда квартиры",850.0],["Fruiteria Sant Antoni",87.76],["Музыкальная школа",62.0],["Электричество",60.63],["Mercadona Barcelona",46.0]],"start":1099.23,"end":1086.52,"diff":-0.0},"2026-05":{"inc":0.0,"exp":1383.91,"tin":1300.0,"tout":-0.0,"xl":0.0,"cats":{"groceries":304.68,"housing":927.33,"kids":107.0,"other":44.9},"top":[["Аренда квартиры",850.0],["Bonpreu",142.72],["Mercadona Barcelona",73.7],["Музыкальная школа",62.0],["Электричество",52.53]],"start":1086.52,"end":1002.61,"diff":0.0},"2026-06":{"inc":0.0,"exp":1345.21,"tin":1300.0,"tout":-0.0,"xl":0.0,"cats":{"groceries":214.18,"housing":930.49,"kids":155.64,"other":44.9},"top":[["Аренда квартиры",850.0],["Музыкальная школа",62.0],["Bonpreu",55.87],["Электричество",55.69],["Игрушки",48.64]],"start":1002.61,"end":957.4,"diff":0.0},"2026-07":{"inc":0.0,"exp":1569.44,"tin":1300.0,"tout":-0.0,"xl":0.0,"cats":{"groceries":233.58,"housing":923.96,"kids":367.0,"other":44.9},"top":[["Аренда квартиры",850.0],["Летний лагерь",260.0],["Condis",83.07],["Bonpreu",69.77],["Музыкальная школа",62.0]],"start":957.4,"end":687.96,"diff":-0.0},"2026-08":{"inc":0.0,"exp":1271.48,"tin":1300.0,"tout":-0.0,"xl":0.0,"cats":{"groceries":192.23,"housing":927.35,"kids":107.0,"other":44.9},"top":[["Аренда квартиры",850.0],["Condis",70.81],["Музыкальная школа",62.0],["Электричество",52.55],["Бассейн",45.0]],"start":687.96,"end":716.48,"diff":0.0},"2026-09":{"inc":0.0,"exp":1407.56,"tin":1300.0,"tout":-0.0,"xl":0.0,"cats":{"groceries":139.82,"housing":936.23,"kids":286.61,"other":44.9},"top":[["Аренда квартиры",850.0],["Школьные принадлежности",142.3],["Fruiteria Sant Antoni",70.31],["Музыкальная школа",62.0],["Электричество",61.43]],"start":716.48,"end":608.92,"diff":-0.0}},"owner":"общий"}]},"config":{"title":"Семейные финансы","currency":"EUR","currencySymbol":"€","adults":[{"name":"Анна","hobbyTitle":"Хобби Анны","hobbyDesc":"йога"},{"name":"Иван","hobbyTitle":"Хобби Ивана","hobbyDesc":"скалолазание"}],"kidsDesc":"музыкальная школа, бассейн, лагерь","incomeGroups":["Зарплата Анны","Зарплата Ивана"],"excludedNote":"Рабочие расходы Ивана, которые возместила компания. Видны здесь, но не входят в итоги","excludedTile":"рабочие расходы — показаны отдельно","bigThreshold":140},"decisions":[{"id":"d1","month":"2026-09","text":"По будням готовим дома, кафе — по выходным","done":false,"createdAt":"2026-10-01"},{"id":"d2","month":"2026-09","text":"Откладываем 1 000 € в месяц на отпуск","done":true,"createdAt":"2026-10-01"}]};
+const REAL={months:{},accounts:null,config:null,review:[],decisions:[]};
+let DEMO_ON=true, canWriteReal=true, lastMode=null;
+function sync(){
+  const real=Object.keys(REAL.months).length>0;
+  DEMO_ON=!real;
+  const src=real?REAL:DEMO;
+  if(lastMode!==real){ Object.keys(txCache).forEach(x=>delete txCache[x]); lastMode=real; cur=null; animSig=""; }
+  S.months=src.months; S.accounts=src.accounts; S.review=src.review||[]; S.decisions=src.decisions||[];
+  applyConfig(src.config||{});
+  canWrite=real&&canWriteReal;
+  $("demoNote").hidden=real;
+  $("banner").hidden=true;
+  render();
+}
+sync();
+(async()=>{
+  try{ db=await window.claude?.use?.("db"); }catch(e){ db=null; }
+  if(!db) return;
+  db.collection("months").onSnapshot(snap=>{const ms={}; snap.docs.forEach(d=>{const v=d.data(); if(v&&v.month) ms[v.month]=v;}); REAL.months=ms; Object.keys(txCache).forEach(x=>delete txCache[x]); sync();},()=>{});
+  db.collection("decisions").onSnapshot(snap=>{REAL.decisions=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt))); if(!DEMO_ON){ S.decisions=REAL.decisions; if(tab==="month") renderNotes(); }},()=>{});
+  db.collection("config").onSnapshot(snap=>{const d0=snap.docs.find(d=>d.id==="main"); REAL.config=d0?d0.data():null; if(!DEMO_ON) sync();},()=>{});
+  db.collection("accounts").onSnapshot(snap=>{const ds=snap.docs.slice().sort((a,b)=>String(a.id).localeCompare(String(b.id))); const d0=ds[ds.length-1]; REAL.accounts=d0?d0.data():null; if(!DEMO_ON){ S.accounts=REAL.accounts; if(tab==="year") renderAccounts(); }},()=>{});
+  db.collection("review").onSnapshot(snap=>{REAL.review=snap.docs.map(d=>({id:d.id,...d.data()})); if(!DEMO_ON){ S.review=REAL.review; renderControls(); if(tab==="review") renderReview(); }},()=>{});
+})();
+})();
+</script>

@@ -1,0 +1,7 @@
+{"title":"Семейные финансы · демо","year":2026,"currency":"EUR","currencySymbol":"€",
+ "adults":[{"name":"Анна","hobbyTitle":"Хобби Анны","hobbyDesc":"йога"},{"name":"Иван","hobbyTitle":"Хобби Ивана","hobbyDesc":"скалолазание"}],
+ "kidsDesc":"музыкальная школа, бассейн, лагерь","incomeGroups":["Зарплата Анны","Зарплата Ивана"],
+ "accountOwners":{"Карта Анны":"Анна","Карта Ивана":"Иван","Общий счёт":"общий"},
+ "excludedNote":"Рабочие расходы Ивана, которые возместила компания. Видны здесь, но не входят в итоги",
+ "excludedTile":"рабочие расходы — показаны отдельно",
+ "bigThreshold":140,"bigExcludeRegex":"Аренда","smallIncomeThreshold":300}
