@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}</style>
+<title>Швартовка лагом</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: one-screen sim — instrument strip on top, chart-view harbour canvas, helm console below (throttle lever left, rudder + crew actions right). Single deliberate night-console look. */
+:root{
+  --water:#0e3a4c; --water-hi:#1b5a70; --console:#0b161c; --panel:#13232b; --rule:#264050;
+  --fg:#e9f2f1; --muted:#8eaeb6; --brass:#f2a93b; --ok:#52d38f; --bad:#ff6363; --wood:#9b7651; --wood-dk:#6e5137;
+  --f-disp:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%}
+[hidden]{display:none!important}
+body{background:var(--console);color:var(--fg);font-family:var(--f-body);overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+#app{height:100%;display:flex;flex-direction:column}
+button{font:inherit;color:inherit}
+button:focus-visible,.track:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+
+/* instrument strip */
+#hud{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px;padding-block:6px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:var(--console);border-bottom:1px solid var(--rule)}
+.g{min-width:0}
+.g b{display:block;font:600 22px/1 var(--f-disp);font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.g span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:500 10px/1.2 var(--f-disp);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+.g.warn b{color:var(--bad)}
+#windG{display:flex;align-items:center;gap:4px}
+#windArrow{flex:none;width:22px;height:22px;transition:transform .4s}
+#windArrow path{fill:var(--brass)}
+
+/* harbour view */
+#view{position:relative;flex:1;min-height:0;background:var(--water)}
+#cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+#check{position:absolute;left:max(10px,env(safe-area-inset-left,0px));top:10px;max-width:min(300px,70%);background:rgba(11,22,28,.86);border:1px solid var(--rule);border-radius:8px;padding:8px 10px;backdrop-filter:blur(4px)}
+#checkHead{display:flex;align-items:center;justify-content:space-between;gap:10px;background:none;border:0;padding:0;width:100%;cursor:pointer;text-align:left}
+#checkHead strong{font:600 13px/1.1 var(--f-disp);letter-spacing:.12em;text-transform:uppercase;color:var(--brass)}
+#checkHead em{font:600 13px var(--f-disp);font-style:normal;color:var(--muted);font-variant-numeric:tabular-nums}
+#checkCur{font-size:13px;line-height:1.3;margin-top:4px}
+#checkList{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:3px}
+#checkList li{display:grid;grid-template-columns:16px 1fr;gap:6px;font-size:12.5px;line-height:1.25;color:var(--muted)}
+#checkList li i{font-style:normal;font-weight:600;text-align:center}
+#checkList li.done{color:var(--fg)} #checkList li.done i{color:var(--ok)}
+#checkList li.late i{color:var(--brass)} #checkList li.late{color:var(--fg)}
+#checkList li.fail i{color:var(--bad)} #checkList li.fail{color:var(--fg)}
+#checkList li.cur{color:var(--fg)} #checkList li.cur i{color:var(--brass)}
+.tools{position:absolute;right:max(10px,env(safe-area-inset-right,0px));top:10px;display:flex;flex-direction:column;gap:6px}
+.tools button{width:38px;height:38px;border-radius:8px;border:1px solid var(--rule);background:rgba(11,22,28,.86);font:600 18px var(--f-disp);cursor:pointer}
+#toast{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);max-width:88%;background:rgba(11,22,28,.92);border:1px solid var(--rule);border-radius:8px;padding:8px 12px;font-size:14px;line-height:1.3;text-align:center;opacity:0;transition:opacity .25s;pointer-events:none}
+#toast.on{opacity:1} #toast.bad{border-color:var(--bad)} #toast.good{border-color:var(--ok)}
+
+/* helm console */
+#deck{display:grid;grid-template-columns:64px 1fr;gap:10px;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:var(--console);border-top:1px solid var(--rule);max-width:760px;width:100%;margin:0 auto;box-sizing:border-box}
+.lbl{font:500 10px/1 var(--f-disp);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+#lever{position:relative;height:100%;min-height:180px;border-radius:10px;background:var(--panel);border:1px solid var(--rule);touch-action:none;cursor:ns-resize}
+#lever .mark{position:absolute;left:0;right:0;text-align:center;font:600 10px var(--f-disp);letter-spacing:.1em;color:var(--muted)}
+#lever .slot{position:absolute;left:50%;top:22px;bottom:22px;width:6px;margin-left:-3px;border-radius:3px;background:#07100f}
+#lever .notch{position:absolute;left:14px;right:14px;top:50%;height:2px;background:var(--rule)}
+#knob{position:absolute;left:8px;right:8px;height:34px;margin-top:-17px;border-radius:8px;background:linear-gradient(#2c4652,#1a2e37);border:1px solid #4b6b78;display:grid;place-items:center;font:700 14px var(--f-disp);font-variant-numeric:tabular-nums;pointer-events:none}
+#knob.fwd{border-color:var(--ok)} #knob.rev{border-color:var(--bad)}
+.right{display:flex;flex-direction:column;gap:8px;min-width:0}
+#rudderWrap{display:grid;gap:4px}
+#rudderTop{display:flex;justify-content:space-between;align-items:baseline}
+#rudderTop b{font:600 15px var(--f-disp);font-variant-numeric:tabular-nums}
+#rudder{position:relative;height:42px;border-radius:10px;background:var(--panel);border:1px solid var(--rule);touch-action:none;cursor:ew-resize;overflow:hidden}
+#rudder .tick{position:absolute;top:0;width:1px;height:8px;background:var(--rule)}
+#rudder .tick.c{height:100%;background:#35525f}
+#rudder .side{position:absolute;bottom:4px;font:600 10px var(--f-disp);letter-spacing:.1em;color:var(--muted)}
+#rKnob{position:absolute;top:5px;bottom:5px;width:30px;margin-left:-15px;border-radius:7px;background:linear-gradient(#2c4652,#1a2e37);border:1px solid var(--brass);pointer-events:none}
+#rNeedle{position:absolute;top:0;width:2px;margin-left:-1px;height:5px;background:var(--brass);pointer-events:none}
+.row{display:grid;gap:6px}
+.r4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.btn{min-height:38px;border-radius:8px;border:1px solid var(--rule);background:var(--panel);font:600 12.5px/1.05 var(--f-disp);letter-spacing:.04em;cursor:pointer;padding:3px 4px;touch-action:manipulation}
+.btn small{display:block;font-weight:500;font-size:10px;color:var(--muted);letter-spacing:.08em;margin-top:2px}
+.btn.on{border-color:var(--ok);background:#14352a}
+.btn.sel{outline:2px solid var(--brass);outline-offset:-2px}
+.btn.reach{border-color:var(--brass)}
+.btn.taut small{color:var(--brass)}
+.btn.eng.off{border-color:var(--bad)}
+.btn:disabled{opacity:.4}
+
+/* sheets */
+.sheet{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:rgba(4,10,13,.6);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.card{width:100%;max-width:440px;max-height:90%;overflow:auto;background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:18px;box-sizing:border-box}
+.card h1,.card h2{font:700 26px/1.05 var(--f-disp);letter-spacing:.02em;margin:0 0 6px;text-wrap:balance}
+.card p{margin:0 0 12px;color:var(--muted);font-size:14px;line-height:1.45}
+.field{display:grid;gap:6px;margin-bottom:12px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{flex:1 1 auto;min-height:36px;border-radius:8px;border:1px solid var(--rule);background:var(--console);font:600 13px var(--f-disp);letter-spacing:.04em;cursor:pointer;padding:4px 8px}
+.seg button.on{border-color:var(--brass);color:var(--brass)}
+.rng{display:flex;align-items:center;gap:10px}
+.rng input{flex:1;accent-color:var(--brass)}
+.rng output{font:600 15px var(--f-disp);min-width:56px;text-align:right;font-variant-numeric:tabular-nums}
+.go{width:100%;min-height:46px;border-radius:10px;border:0;background:var(--brass);color:#1a1205;font:700 17px var(--f-disp);letter-spacing:.08em;text-transform:uppercase;cursor:pointer;margin-top:4px}
+.ghost{width:100%;min-height:40px;border-radius:10px;border:1px solid var(--rule);background:none;font:600 14px var(--f-disp);letter-spacing:.06em;cursor:pointer;margin-top:8px}
+.tips{font-size:13px;line-height:1.45;color:var(--muted);margin:0 0 12px;padding-left:18px}
+.tips li{margin-bottom:4px}
+.score{font:700 64px/1 var(--f-disp);color:var(--brass);font-variant-numeric:tabular-nums}
+#resList{list-style:none;padding:0;margin:10px 0 12px;display:grid;gap:4px;font-size:14px}
+#resList li{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--rule);padding-bottom:4px}
+#resList li span:last-child{white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--muted)}
+@media (max-height:640px){ #lever{min-height:150px} .btn{min-height:34px} .g b{font-size:19px} }
+@media (prefers-reduced-motion:reduce){ #windArrow,#toast{transition:none} }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div id="hud">
+    <div class="g" id="gSpd"><b id="hSpd">0.0</b><span>скор., уз</span></div>
+    <div class="g" id="gGap"><b id="hGap">—</b><span>зазор, м</span></div>
+    <div class="g"><b id="hHdg">000°</b><span>курс</span></div>
+    <div class="g" id="gDmg"><b id="hDmg">0</b><span>урон</span></div>
+    <div class="g" id="windG"><svg id="windArrow" viewBox="-12 -12 24 24" aria-hidden="true"><path d="M-10 -3 H3 V-8 L11 0 L3 8 V3 H-10 Z"/></svg><div style="min-width:0"><b id="hWind">10</b><span>ветер</span></div></div>
+  </div>
+
+  <div id="view">
+    <canvas id="cv"></canvas>
+    <div id="check">
+      <button id="checkHead" type="button" aria-expanded="false"><strong>Чек-лист</strong><em id="checkCount">0/9</em></button>
+      <div id="checkCur"></div>
+      <ol id="checkList" hidden></ol>
+    </div>
+    <div class="tools">
+      <button id="zIn" type="button" aria-label="Приблизить">+</button>
+      <button id="zOut" type="button" aria-label="Отдалить">−</button>
+      <button id="setBtn" type="button" aria-label="Сценарий">☰</button>
+    </div>
+    <div id="toast" role="status" aria-live="polite"></div>
+  </div>
+
+  <div id="deck">
+    <div id="lever" class="track" tabindex="0" aria-label="Газ и реверс">
+      <div class="mark" style="top:5px">ВПЕРЁД</div>
+      <div class="slot"></div><div class="notch"></div>
+      <div class="mark" style="bottom:5px">НАЗАД</div>
+      <div id="knob">N</div>
+    </div>
+    <div class="right">
+      <div id="rudderWrap">
+        <div id="rudderTop"><span class="lbl">Руль (тап дважды — прямо)</span><b id="rVal">0°</b></div>
+        <div id="rudder" class="track" tabindex="0" aria-label="Руль"><span class="side" style="left:8px">ЛЕВО</span><span class="side" style="right:8px">ПРАВО</span><div id="rNeedle"></div><div id="rKnob"></div></div>
+      </div>
+      <div class="row r4">
+        <button class="btn" id="fP" type="button">Кранцы<small>левый борт</small></button>
+        <button class="btn" id="fS" type="button">Кранцы<small>правый борт</small></button>
+        <button class="btn" id="pP" type="button">Концы<small>левый борт</small></button>
+        <button class="btn" id="pS" type="button">Концы<small>правый борт</small></button>
+      </div>
+      <div class="row r4" id="lineRow"></div>
+      <div class="row r4">
+        <button class="btn" id="lIn" type="button">Выбрать<small>−0,25 м</small></button>
+        <button class="btn" id="lOut" type="button">Потравить<small>+0,25 м</small></button>
+        <button class="btn" id="lOff" type="button">Отдать<small>снять конец</small></button>
+        <button class="btn eng" id="eng" type="button">Мотор<small>работает</small></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="setup">
+  <div class="card">
+    <h1>Топливный причал</h1>
+    <p>Подойдите лагом в свободное место между двумя яхтами, не ударив корпус. Лодка 10 м, один винт, руль за винтом. От выбранного двигателя зависит, куда занесёт корму на заднем ходу.</p>
+    <div class="field"><span class="lbl">Швартуемся бортом</span><div class="seg" data-k="side"><button data-v="port">Левым</button><button data-v="stbd">Правым</button></div></div>
+    <div class="field"><span class="lbl">Ветер</span><div class="seg" data-k="wind"><button data-v="off">Отжимной</button><button data-v="on">Прижимной</button><button data-v="ahead">Встречный</button><button data-v="astern">Попутный</button></div></div>
+    <div class="field"><div class="rng"><input id="wKn" type="range" min="0" max="25" step="1"><output id="wKnO"></output></div></div>
+    <div class="field"><span class="lbl">Течение вдоль причала</span><div class="seg" data-k="cur"><button data-v="none">Нет</button><button data-v="ahead">Навстречу</button><button data-v="astern">Попутное</button></div></div>
+    <div class="field"><div class="rng"><input id="cKn" type="range" min="0" max="1.5" step="0.1"><output id="cKnO"></output></div></div>
+    <div class="field"><span class="lbl">Свободное место у причала</span><div class="rng"><input id="gapM" type="range" min="13" max="24" step="1"><output id="gapMO"></output></div></div>
+    <div class="field"><span class="lbl">Двигатель — куда заносит корму на заднем ходу</span><div class="seg" data-k="pw"><button data-v="1">Yanmar · корму влево</button><button data-v="-1">Volvo · корму вправо</button><button data-v="0">Без заброса</button></div></div>
+    <ul class="tips">
+      <li>Рычаг слева: вверх — вперёд, середина — нейтраль, вниз — реверс.</li>
+      <li>Руль работает от потока винта: короткий толчок газом разворачивает даже на месте.</li>
+      <li>Концы подаются, когда кнехт лодки в 1,8 м от причала: кнопка подсветится жёлтым.</li>
+      <li>Приём «на шпринг»: подан носовой шпринг, малый вперёд, руль от причала — корма прижимается.</li>
+    </ul>
+    <button class="go" id="start" type="button">Начать</button>
+  </div>
+</div>
+
+<div class="sheet" id="result" hidden>
+  <div class="card">
+    <h2 id="resTitle">Ошвартованы</h2>
+    <div class="score" id="resScore">0</div>
+    <ul id="resList"></ul>
+    <button class="go" id="again" type="button">Ещё раз</button>
+    <button class="ghost" id="toSetup" type="button">Изменить условия</button>
+  </div>
+</div>
+
+<script>
+(()=>{
+'use strict';
+const $=s=>document.querySelector(s);
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const KN=1.94384, DEG=Math.PI/180;
+const wrap=a=>{while(a>Math.PI)a-=2*Math.PI;while(a<-Math.PI)a+=2*Math.PI;return a;};
+
+/* ---------- boat & harbour constants (10 m motor yacht, ~6 t) ---------- */
+const C={L:10,mx:6300,my:10000,Iz:70000,Tmax:4200,Tidle:600,Trev:0.6,tauT:0.7,
+  Xu:250,Xuu:280,Yv:2200,Yvv:2800,Nr:35000,Nrr:90000,
+  Cr:420,xr:-4.6,wash:0.055,pw:0.25,rudMax:35*DEG,rudRate:45*DEG,
+  Kax:2.9,Kay:9.6,
+  kHard:260000,cHard:38000,kSoft:45000,cSoft:16000,fenderM:0.25,muHard:0.35,muSoft:0.15,
+  kLine:6000,cLine:3200,breakT:22000,reach:1.8,lineMax:12,DET:0.08};
+const HULL=[[5,0],[4.4,.75],[3.5,1.3],[2.2,1.62],[.5,1.7],[-2.5,1.7],[-4.6,1.62],[-5,1.5],[-5,-1.5],[-4.6,-1.62],[-2.5,-1.7],[.5,-1.7],[2.2,-1.62],[3.5,-1.3],[4.4,-.75]];
+const SAMPLES=(()=>{const out=[];for(let i=0;i<HULL.length;i++){const a=HULL[i],b=HULL[(i+1)%HULL.length];const n=Math.max(1,Math.ceil(Math.hypot(b[0]-a[0],b[1]-a[1])/0.45));for(let k=0;k<n;k++){const t=k/n;out.push([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]);}}return out;})();
+const LINES=[
+  {id:'bow',  name:'Носовой', sub:'швартов', at:'bow',  pref:3,  test:d=>d>0.3},
+  {id:'bowS', name:'Нос.',    sub:'шпринг',  at:'bow',  pref:-5, test:d=>d<-1},
+  {id:'strS', name:'Корм.',   sub:'шпринг',  at:'stern',pref:5,  test:d=>d>1},
+  {id:'stern',name:'Кормовой',sub:'швартов', at:'stern',pref:-3, test:d=>d<-0.3}];
+const CLEAT={bow:[4.0,1.25],stern:[-4.7,1.5]};
+const BOLLARDS=[];for(let x=-30;x<=30;x+=3)BOLLARDS.push([x,-0.55]);
+
+/* ---------- scenario ---------- */
+let SC={side:'port',wind:'off',wKn:12,cur:'none',cKn:0.5,gap:17,pw:1};
+try{const s=JSON.parse(localStorage.getItem('berth-sc')||'null');if(s)SC={...SC,...s};}catch(e){}
+let OBST=[],MOORED=[],S,steps,cam={x:0,y:0},zoom=1,paused=true,wake=[];
+
+function buildHarbour(){
+  const g=SC.gap/2;
+  MOORED=[{x0:-g-11.5,x1:-g,psi:0,col:'#203a63'},{x0:g,x1:g+12.5,psi:0,col:'#6b2b2b'}];
+  OBST=[{x0:-90,x1:90,y0:-16,y1:0}];
+  MOORED.forEach(m=>{m.y0=0.3;m.y1=3.9;OBST.push({x0:m.x0,x1:m.x1,y0:m.y0,y1:m.y1,boat:1});});
+}
+function reset(){
+  buildHarbour();
+  const d=SC.side==='port'?1:-1;
+  const w=SC.wKn/KN, c=SC.cKn/KN;
+  const wv={off:[0,w],on:[0,-w],ahead:[-d*w,0],astern:[d*w,0]}[SC.wind];
+  const cv={none:[0,0],ahead:[-d*c,0],astern:[d*c,0]}[SC.cur];
+  S={x:-d*34,y:21,psi:d>0?-14*DEG:Math.PI+14*DEG,u:1.1,v:0,r:0,thr:0,rud:0,helm:0,lever:0,engine:true,
+    fend:{port:false,stbd:false},prep:{port:false,stbd:false},lines:{},sel:null,
+    wind:wv,curr:cv,gust:1,gustT:1,gustNext:3,t:0,dmg:0,contacts:new Float64Array(SAMPLES.length).fill(-9),
+    inZone:false,maxZone:0,hits:[],secureT:0,secured:false,finished:false,lastToast:{},gap:99,spd:0,offT:0};
+  steps=makeSteps();
+  wake=[];cam.x=S.x*0.5;cam.y=12;
+  renderLineRow();renderChecklist();syncButtons();
+}
+
+/* ---------- checklist ---------- */
+function makeSteps(){
+  const b=SC.side==='port'?'левый':'правый', b2=SC.side==='port'?'левом':'правом';
+  return [
+    {id:'fend',t:`Кранцы на ${b} борт до входа в зону 10 м`},
+    {id:'prep',t:`Швартовы подготовлены на ${b2} борту`},
+    {id:'slow',t:'В зоне 10 м скорость не выше 1,5 уз'},
+    {id:'touch',t:'Подойти на ≤ 1 м без удара корпусом'},
+    {id:'spring',t:'Подать шпринг'},
+    {id:'bow',t:'Завести носовой швартов'},
+    {id:'stern',t:'Завести кормовой швартов'},
+    {id:'secure',t:'Стоим параллельно: зазор ≤ 0,8 м, угол ≤ 8°, без хода'},
+    {id:'off',t:'Нейтраль и заглушить двигатель'}].map(s=>({...s,st:'todo',note:''}));
+}
+const st=id=>steps.find(s=>s.id===id);
+function mark(id,v,note){const s=st(id);if(s.st===v)return;s.st=v;if(note)s.note=note;renderChecklist();}
+function evalSteps(){
+  const side=SC.side, tgt=side==='port'?0:Math.PI;
+  const zoneNow=S.gap<10&&Math.abs(S.x)<SC.gap/2+22;
+  if(zoneNow&&!S.inZone){S.inZone=true;
+    if(!S.fend[side])toast('Вошли в зону 10 м без кранцев на нужном борту','bad');
+  }
+  const f=st('fend');
+  if(f.st==='todo'&&S.fend[side])mark('fend',S.inZone?'late':'done',S.inZone?'поздно':'');
+  const p=st('prep');
+  if(p.st==='todo'&&S.prep[side])mark('prep',S.inZone?'late':'done',S.inZone?'поздно':'');
+  if(S.inZone&&!S.secured){S.maxZone=Math.max(S.maxZone,S.spd);
+    if(S.spd>1.5&&st('slow').st!=='fail'){mark('slow','fail',S.spd.toFixed(1)+' уз');toast(`Слишком быстро у причала: ${S.spd.toFixed(1)} уз`,'bad');}}
+  if(st('touch').st==='todo'&&S.gap<=1){mark('touch',S.hits.some(h=>h.hard)?'fail':'done');
+    if(st('slow').st==='todo')mark('slow','done');}
+  if(st('spring').st==='todo'&&(S.lines.bowS||S.lines.strS))mark('spring','done');
+  if(st('bow').st==='todo'&&S.lines.bow)mark('bow','done');
+  if(st('stern').st==='todo'&&S.lines.stern)mark('stern','done');
+  const ang=Math.abs(wrap(S.psi-tgt))/DEG, nL=Object.keys(S.lines).length;
+  const ok=nL>=3&&(S.lines.bowS||S.lines.strS)&&S.gap<=0.8&&ang<=8&&S.spd<0.15&&Math.abs(S.r)<0.02;
+  S.secureT=ok?S.secureT+1/10:0;
+  S.secured=S.secureT>=2;
+  if(S.secured&&st('secure').st==='todo'){mark('secure','done');toast('Лодка надёжно у причала. Нейтраль и глушим двигатель.','good');}
+  if(st('secure').st==='done'&&!S.engine&&!S.finished){mark('off','done');S.finished=true;setTimeout(finish,700);}
+}
+function renderChecklist(){
+  const list=$('#checkList'),done=steps.filter(s=>s.st!=='todo').length;
+  $('#checkCount').textContent=`${done}/${steps.length}`;
+  const cur=steps.find(s=>s.st==='todo');
+  list.innerHTML='';
+  steps.forEach(s=>{const li=document.createElement('li');li.className=s.st==='todo'?(s===cur?'cur':''):s.st;
+    li.innerHTML=`<i>${{done:'✓',late:'!',fail:'✕',todo:s===cur?'›':'·'}[s.st]}</i><span></span>`;
+    li.lastChild.textContent=s.t+(s.note?` — ${s.note}`:'');list.appendChild(li);});
+  $('#checkCur').textContent=cur?cur.t:'Все пункты выполнены';
+  $('#checkCur').hidden=!list.hidden;
+}
+$('#checkHead').onclick=()=>{const l=$('#checkList');l.hidden=!l.hidden;$('#checkHead').setAttribute('aria-expanded',String(!l.hidden));renderChecklist();};
+
+/* ---------- toast ---------- */
+let toastTO;
+function toast(msg,kind,key){
+  if(key){const t=S.lastToast[key]||-9;if(S.t-t<1.5)return;S.lastToast[key]=S.t;}
+  const el=$('#toast');el.textContent=msg;el.className='on '+(kind||'');clearTimeout(toastTO);toastTO=setTimeout(()=>el.className='',2600);
+}
+
+/* ---------- geometry helpers ---------- */
+function toWorld(bx,by){const c=Math.cos(S.psi),s=Math.sin(S.psi);return [S.x+c*bx-s*by,S.y+s*bx+c*by];}
+function vel(){const c=Math.cos(S.psi),s=Math.sin(S.psi);return [c*S.u-s*S.v+S.curr[0],s*S.u+c*S.v+S.curr[1]];}
+const facingSide=()=>-Math.cos(S.psi)>=0?1:-1; // body-y sign that faces the pier (+1 starboard)
+const sideName=sg=>sg>0?'stbd':'port';
+function cleatBody(at){const c=CLEAT[at];return [c[0],c[1]*facingSide()];}
+function lineCandidate(L){
+  const [cx,cy]=toWorld(...cleatBody(L.at));
+  const fwd=Math.cos(S.psi)>=0?1:-1;
+  let best=null,bd=1e9;
+  for(const b of BOLLARDS){const along=(b[0]-cx)*fwd;if(!L.test(along))continue;
+    const sc=Math.abs(along-L.pref);const d=Math.hypot(b[0]-cx,b[1]-cy);if(d>9)continue;if(sc<bd){bd=sc;best=b;}}
+  return {b:best,cx,cy,reach:cy<=C.reach};
+}
+
+/* ---------- physics ---------- */
+function step(dt){
+  S.t+=dt;
+  const c=Math.cos(S.psi),s=Math.sin(S.psi);
+  const lev=S.engine?S.lever:0;
+  let cmd=0;
+  if(Math.abs(lev)>C.DET){const a=(Math.abs(lev)-C.DET)/(1-C.DET);cmd=Math.sign(lev)*(C.Tidle+(C.Tmax-C.Tidle)*a*a)*(lev<0?C.Trev:1);}
+  S.thr+=(cmd-S.thr)*Math.min(1,dt/C.tauT);
+  S.rud+=clamp(S.helm-S.rud,-C.rudRate*dt,C.rudRate*dt);
+  S.gustNext-=dt;if(S.gustNext<=0){S.gustT=0.75+Math.random()*0.55;S.gustNext=2.5+Math.random()*4;}
+  S.gust+=(S.gustT-S.gust)*dt/1.6;
+  const {u,v,r}=S,T=S.thr;
+  let Fx=T-C.Xu*u-C.Xuu*u*Math.abs(u), Fy=-C.Yv*v-C.Yvv*v*Math.abs(v), N=-C.Nr*r-C.Nrr*r*Math.abs(r);
+  // rudder: flow = boat speed + prop wash (only going ahead)
+  const vr=u+(T>0?C.wash*Math.sqrt(T):0), sd=Math.sin(S.rud);
+  const Fr=-C.Cr*vr*Math.abs(vr)*sd;
+  Fy+=Fr;N+=Fr*C.xr;Fx-=C.Cr*0.35*vr*vr*sd*sd;
+  // prop walk (right-hand prop: astern kicks stern to port)
+  const Fp=T<0?-SC.pw*C.pw*(-T):SC.pw*C.pw*0.2*T;
+  Fy+=Fp;N+=Fp*C.xr;
+  // wind on topsides
+  const [gx,gy]=vel();
+  const wxw=S.wind[0]*S.gust-gx, wyw=S.wind[1]*S.gust-gy;
+  const wx=c*wxw+s*wyw, wy=-s*wxw+c*wyw;
+  const Fwx=C.Kax*wx*Math.abs(wx), Fwy=C.Kay*wy*Math.abs(wy);
+  const gam=Math.atan2(-wy,-wx);
+  Fx+=Fwx;Fy+=Fwy;N+=Fwy*C.L*(0.06+0.16*Math.cos(gam));
+  // world-frame external forces
+  let EX=0,EY=0;
+  const side=facingSide();
+  for(let i=0;i<SAMPLES.length;i++){
+    const [bx,by]=SAMPLES[i];
+    const soft=(by>0?S.fend.stbd:S.fend.port)&&Math.abs(bx)<3.7&&Math.abs(by)>1.45;
+    const px=S.x+c*bx-s*by, py=S.y+s*bx+c*by, rx=px-S.x, ry=py-S.y;
+    const vx=gx-r*ry, vy=gy+r*rx;
+    const m=soft?C.fenderM:0;
+    for(const o of OBST){
+      if(px<=o.x0-m||px>=o.x1+m||py<=o.y0-m||py>=o.y1+m)continue;
+      let d=px-(o.x0-m),nx=-1,ny=0;
+      const dr=(o.x1+m)-px,dtp=py-(o.y0-m),db=(o.y1+m)-py;
+      if(dr<d){d=dr;nx=1;ny=0;} if(dtp<d){d=dtp;nx=0;ny=-1;} if(db<d){d=db;nx=0;ny=1;}
+      const vn=vx*nx+vy*ny;
+      if(S.t-S.contacts[i]>0.8&&vn<-0.04)impact(-vn,soft,o.boat);
+      S.contacts[i]=S.t;
+      const k=soft?C.kSoft:C.kHard,cd=soft?C.cSoft:C.cHard;
+      const Fn=Math.max(0,k*d-cd*vn);
+      const tx=-ny,ty=nx,vt=vx*tx+vy*ty,mu=soft?C.muSoft:C.muHard;
+      const Ft=-clamp(25000*vt,-mu*Fn,mu*Fn);
+      const fx=Fn*nx+Ft*tx, fy=Fn*ny+Ft*ty;
+      EX+=fx;EY+=fy;N+=rx*fy-ry*fx;
+    }
+  }
+  for(const L of LINES){
+    const ln=S.lines[L.id];if(!ln)continue;
+    const [bx,by]=cleatBody(L.at);
+    const px=S.x+c*bx-s*by, py=S.y+s*bx+c*by, rx=px-S.x, ry=py-S.y;
+    const vx=gx-r*ry, vy=gy+r*rx;
+    const dx=px-ln.b[0],dy=py-ln.b[1],d=Math.hypot(dx,dy);ln.d=d;ln.T=0;
+    if(d>ln.len&&d>1e-3){const ex=dx/d,ey=dy/d;const Tn=Math.max(0,C.kLine*(d-ln.len)+C.cLine*(vx*ex+vy*ey));ln.T=Tn;
+      EX-=Tn*ex;EY-=Tn*ey;N+=rx*(-Tn*ey)-ry*(-Tn*ex);
+      if(Tn>C.breakT){delete S.lines[L.id];S.dmg+=8;S.hits.push({txt:'Лопнул '+L.name.toLowerCase()+' '+L.sub,pen:8});toast(`Лопнул ${L.name.toLowerCase()} ${L.sub}! Слишком большая нагрузка.`,'bad');renderLineRow();}}
+  }
+  Fx+=c*EX+s*EY;Fy+=-s*EX+c*EY;
+  S.u+=(Fx+C.my*v*r)/C.mx*dt;
+  S.v+=(Fy-C.mx*u*r)/C.my*dt;
+  S.r+=N/C.Iz*dt;
+  const [nx2,ny2]=vel();
+  S.x+=nx2*dt;S.y+=ny2*dt;S.psi=wrap(S.psi+S.r*dt);
+  // keep inside the basin
+  if(Math.abs(S.x)>75){S.x=Math.sign(S.x)*75;S.u*=-0.2;}
+  if(S.y>55){S.y=55;S.v*=-0.2;}
+}
+function impact(spd,soft,boat){
+  let pen=0,txt='',hard=false;
+  if(soft){if(spd>0.55){pen=Math.round((spd-0.55)*80)+3;txt=`Жёсткий навал на кранцы, ${spd.toFixed(2)} м/с`;}}
+  else{hard=true;pen=spd>0.12?Math.round(5+spd*60):2;txt=(boat?'Задели соседнюю яхту':'Удар корпусом о причал')+(spd>0.12?`, ${spd.toFixed(2)} м/с`:' — царапина');}
+  if(!pen)return;
+  S.dmg+=pen;S.hits.push({txt,pen,hard});
+  toast(txt,'bad','hit');
+  if(hard&&st('touch').st==='todo'&&!S.secured)mark('touch','fail','удар');
+}
+
+/* ---------- controls ---------- */
+const lever=$('#lever'),knob=$('#knob'),rud=$('#rudder');
+function drag(el,fn,dbl){
+  let last=0;
+  el.addEventListener('pointerdown',e=>{e.preventDefault();el.setPointerCapture(e.pointerId);
+    const now=performance.now();if(dbl&&now-last<300){dbl();last=0;return;}last=now;fn(e);
+    const mv=ev=>fn(ev),up=()=>{el.removeEventListener('pointermove',mv);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);};
+    el.addEventListener('pointermove',mv);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);});
+}
+drag(lever,e=>{const b=lever.getBoundingClientRect();let v=1-2*(e.clientY-b.top-22)/(b.height-44);v=clamp(v,-1,1);if(Math.abs(v)<0.07)v=0;S.lever=v;syncLever();});
+drag(rud,e=>{const b=rud.getBoundingClientRect();const v=clamp(((e.clientX-b.left)/b.width)*2-1,-1,1);S.helm=(Math.abs(v)<0.03?0:v)*C.rudMax;syncRudder();},()=>{S.helm=0;syncRudder();});
+(()=>{for(let i=-7;i<=7;i++){const t=document.createElement('div');t.className='tick'+(i===0?' c':'');t.style.left=(50+i*50/7)+'%';rud.appendChild(t);}})();
+function syncLever(){
+  const b=lever.clientHeight-44, y=22+(1-S.lever)/2*b;knob.style.top=y+'px';
+  const v=S.lever,a=Math.abs(v)>C.DET?Math.round((Math.abs(v)-C.DET)/(1-C.DET)*100):0;
+  knob.textContent=a===0?(v===0?'N':'ХХ'):(v>0?'▲':'▼')+a;
+  if(Math.abs(v)>0&&a===0)knob.textContent=v>0?'▲ХХ':'▼ХХ';
+  knob.className=v>C.DET?'fwd':v<-C.DET?'rev':'';
+}
+function syncRudder(){
+  $('#rKnob').style.left=(50+S.helm/C.rudMax*50)+'%';
+  const d=Math.round(S.helm/DEG);$('#rVal').textContent=d===0?'0°':`${Math.abs(d)}° ${d>0?'П':'Л'}`;
+}
+document.addEventListener('keydown',e=>{
+  if(paused)return;
+  const k=e.key;
+  if(k==='ArrowUp'||k==='w'){S.lever=clamp(+(S.lever+0.05).toFixed(2),-1,1);if(Math.abs(S.lever)<0.04)S.lever=0;syncLever();e.preventDefault();}
+  else if(k==='ArrowDown'||k==='s'){S.lever=clamp(+(S.lever-0.05).toFixed(2),-1,1);if(Math.abs(S.lever)<0.04)S.lever=0;syncLever();e.preventDefault();}
+  else if(k==='ArrowLeft'||k==='a'){S.helm=clamp(S.helm-5*DEG,-C.rudMax,C.rudMax);syncRudder();e.preventDefault();}
+  else if(k==='ArrowRight'||k==='d'){S.helm=clamp(S.helm+5*DEG,-C.rudMax,C.rudMax);syncRudder();e.preventDefault();}
+  else if(k===' '){S.lever=0;syncLever();e.preventDefault();}
+  else if(k==='c'){S.helm=0;syncRudder();}
+});
+const tog=(o,k,on,off)=>{o[k]=!o[k];toast(o[k]?on:off);syncButtons();};
+$('#fP').onclick=()=>tog(S.fend,'port','Кранцы вывешены на левый борт','Кранцы левого борта убраны');
+$('#fS').onclick=()=>tog(S.fend,'stbd','Кранцы вывешены на правый борт','Кранцы правого борта убраны');
+$('#pP').onclick=()=>tog(S.prep,'port','Швартовы разнесены по левому борту','Швартовы левого борта убраны');
+$('#pS').onclick=()=>tog(S.prep,'stbd','Швартовы разнесены по правому борту','Швартовы правого борта убраны');
+$('#eng').onclick=()=>{
+  if(S.engine){if(S.lever!==0){toast('Сначала рычаг в нейтраль','bad');return;}S.engine=false;toast(S.secured?'Двигатель заглушён':'Двигатель заглушён — лодка без хода!',S.secured?'good':'bad');}
+  else{S.engine=true;toast('Двигатель запущен');}
+  syncButtons();
+};
+function renderLineRow(){
+  const row=$('#lineRow');row.innerHTML='';
+  LINES.forEach(L=>{const b=document.createElement('button');b.type='button';b.className='btn';b.id='ln-'+L.id;b.innerHTML=`${L.name}<small>${L.sub}</small>`;
+    b.onclick=()=>lineTap(L);row.appendChild(b);});
+  syncButtons();
+}
+function lineTap(L){
+  if(S.lines[L.id]){S.sel=S.sel===L.id?null:L.id;syncButtons();return;}
+  const sd=sideName(facingSide());
+  if(!S.prep[sd]){toast(`Швартовы не подготовлены на ${sd==='port'?'левом':'правом'} борту`,'bad');return;}
+  const cand=lineCandidate(L);
+  if(!cand.reach){toast(`До причала ${Math.max(0,cand.cy).toFixed(1)} м от кнехта — матрос не дотянется (нужно ≤ ${C.reach} м)`,'bad');return;}
+  if(!cand.b){toast('Нет подходящей тумбы в нужном направлении','bad');return;}
+  const d=Math.hypot(cand.b[0]-cand.cx,cand.b[1]-cand.cy);
+  S.lines[L.id]={b:cand.b,len:d+0.3,d,T:0};S.sel=L.id;
+  toast(`${L.name} ${L.sub} заведён на тумбу и закреплён`,'good');syncButtons();
+}
+function repeatBtn(el,fn){let iv;const stop=()=>{clearInterval(iv);iv=null;};
+  el.addEventListener('pointerdown',e=>{e.preventDefault();fn();iv=setInterval(fn,160);});
+  ['pointerup','pointerleave','pointercancel'].forEach(t=>el.addEventListener(t,stop));
+  el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fn();}});}
+repeatBtn($('#lIn'),()=>adjLine(-0.25));
+repeatBtn($('#lOut'),()=>adjLine(0.25));
+function adjLine(dl){const ln=S.sel&&S.lines[S.sel];if(!ln){toast('Выберите заведённый конец');return;}
+  if(dl<0&&ln.T>9000){toast('Конец под большой нагрузкой — руками не выбрать','bad','adj');return;}
+  ln.len=clamp(ln.len+dl,0.6,C.lineMax);}
+$('#lOff').onclick=()=>{if(!S.sel||!S.lines[S.sel]){toast('Выберите заведённый конец');return;}const L=LINES.find(l=>l.id===S.sel);delete S.lines[S.sel];S.sel=null;toast(`${L.name} ${L.sub} отдан`);syncButtons();};
+function syncButtons(){
+  if(!S)return;
+  $('#fP').classList.toggle('on',S.fend.port);$('#fS').classList.toggle('on',S.fend.stbd);
+  $('#pP').classList.toggle('on',S.prep.port);$('#pS').classList.toggle('on',S.prep.stbd);
+  const e=$('#eng');e.classList.toggle('off',!S.engine);e.querySelector('small').textContent=S.engine?'работает':'заглушён';
+  const sd=sideName(facingSide());
+  LINES.forEach(L=>{const b=$('#ln-'+L.id);if(!b)return;const ln=S.lines[L.id];
+    b.classList.toggle('on',!!ln);b.classList.toggle('sel',S.sel===L.id);
+    let reach=false;if(!ln&&S.prep[sd]){const c=lineCandidate(L);reach=c.reach&&!!c.b;}
+    b.classList.toggle('reach',reach);
+    const sm=b.querySelector('small');
+    if(ln){b.classList.toggle('taut',ln.T>300);sm.textContent=ln.T>300?`${(ln.T/9.81).toFixed(0)} кгс`:'слабина';}
+    else{b.classList.remove('taut');sm.textContent=reach?'подать':L.sub;}
+  });
+  const has=S.sel&&S.lines[S.sel];['#lIn','#lOut','#lOff'].forEach(id=>$(id).disabled=!has);
+}
+
+/* ---------- view ---------- */
+const cv=$('#cv'),ctx=cv.getContext('2d');let VW=0,VH=0,DPR=1;
+function resize(){const r=cv.getBoundingClientRect();DPR=Math.min(2,window.devicePixelRatio||1);VW=r.width;VH=r.height;cv.width=Math.round(VW*DPR);cv.height=Math.round(VH*DPR);syncLever();}
+new ResizeObserver(resize).observe(cv);
+$('#zIn').onclick=()=>zoom=clamp(zoom*1.25,0.5,3);
+$('#zOut').onclick=()=>zoom=clamp(zoom/1.25,0.5,3);
+const scale=()=>Math.max(6,Math.min(VW/36,VH/30))*zoom;
+function scr(x,y){const k=scale();return [VW/2+(x-cam.x)*k,VH/2+(y-cam.y)*k];}
+function worldT(){const k=scale();ctx.setTransform(DPR*k,0,0,DPR*k,DPR*(VW/2-cam.x*k),DPR*(VH/2-cam.y*k));}
+function screenT(){ctx.setTransform(DPR,0,0,DPR,0,0);}
+function hullPath(L,B){const sx=L/10,sy=B/3.4;ctx.beginPath();HULL.forEach((p,i)=>{const x=p[0]*sx,y=p[1]*sy;i?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.closePath();}
+function hash(i,j){let h=Math.sin(i*127.1+j*311.7)*43758.5453;return h-Math.floor(h);}
+
+function draw(){
+  const k=scale();
+  screenT();ctx.fillStyle='#0e3a4c';ctx.fillRect(0,0,VW,VH);
+  worldT();
+  // water texture drifting with the current
+  const tile=4, x0=Math.floor((cam.x-VW/2/k)/tile)-1, x1=Math.ceil((cam.x+VW/2/k)/tile)+1, y0=Math.floor((cam.y-VH/2/k)/tile)-1, y1=Math.ceil((cam.y+VH/2/k)/tile)+1;
+  ctx.strokeStyle='rgba(120,190,205,.16)';ctx.lineWidth=1.2/k;ctx.beginPath();
+  const ox=(S.curr[0]*S.t)%tile, oy=(S.curr[1]*S.t)%tile;
+  for(let i=x0;i<=x1;i++)for(let j=Math.max(y0,0);j<=y1;j++){const h=hash(i,j);const px=i*tile+h*3+ox,py=j*tile+hash(j,i)*3+oy;const w=0.5+h*0.6,ph=Math.sin(S.t*1.3+h*9)*0.12;ctx.moveTo(px-w,py+ph);ctx.quadraticCurveTo(px,py-0.25+ph,px+w,py+ph);}
+  ctx.stroke();
+  // approach zone & target berth
+  const g=SC.gap/2;
+  ctx.setLineDash([0.6,0.6]);ctx.strokeStyle='rgba(242,169,59,.55)';ctx.lineWidth=1.5/k;
+  ctx.beginPath();ctx.moveTo(-g-20,10);ctx.lineTo(g+20,10);ctx.stroke();
+  ctx.strokeStyle='rgba(233,242,241,.35)';
+  const bs=SC.side==='port'?1:-1;ctx.save();ctx.translate(0,0.25+1.7);ctx.scale(bs,1);hullPath(10,3.4);ctx.restore();ctx.stroke();
+  ctx.setLineDash([]);
+  // pier
+  ctx.fillStyle='#9b7651';ctx.fillRect(-90,-16,180,16);
+  ctx.strokeStyle='rgba(60,40,22,.45)';ctx.lineWidth=1/k;ctx.beginPath();
+  const pl0=Math.floor(cam.x-VW/2/k),pl1=Math.ceil(cam.x+VW/2/k);
+  for(let x=pl0;x<=pl1;x+=0.33){ctx.moveTo(x,-16);ctx.lineTo(x,0);} ctx.stroke();
+  ctx.fillStyle='#6e5137';ctx.fillRect(-90,-0.32,180,0.32);
+  ctx.fillStyle='#1d1d1d';ctx.fillRect(-90,-0.08,180,0.08);
+  // pumps
+  [[-2.4,'ДТ'],[2.4,'АИ-95']].forEach(([x])=>{ctx.fillStyle='#c0392b';ctx.fillRect(x-0.6,-3.2,1.2,0.8);ctx.fillStyle='#eee';ctx.fillRect(x-0.35,-3.05,0.7,0.25);});
+  ctx.strokeStyle='#222';ctx.lineWidth=0.06;ctx.beginPath();ctx.moveTo(-2.4,-2.4);ctx.bezierCurveTo(-2.4,-1.4,-1.6,-1.6,-1.5,-1.0);ctx.stroke();
+  // bollards
+  for(const b of BOLLARDS){ctx.fillStyle='#202628';ctx.beginPath();ctx.arc(b[0],b[1],0.24,0,7);ctx.fill();ctx.fillStyle='#4b5559';ctx.beginPath();ctx.arc(b[0]-0.05,b[1]-0.05,0.11,0,7);ctx.fill();}
+  // moored boats
+  MOORED.forEach(m=>{const L=m.x1-m.x0;ctx.save();ctx.translate((m.x0+m.x1)/2,(m.y0+m.y1)/2);
+    ctx.fillStyle=m.col;hullPath(L,3.6);ctx.fill();ctx.fillStyle='#d9dedd';ctx.save();ctx.scale(0.86,0.8);hullPath(L,3.6);ctx.fill();ctx.restore();
+    ctx.fillStyle='#b9c3c4';ctx.fillRect(-L*0.22,-1.0,L*0.36,2.0);ctx.fillStyle='#2b3b45';ctx.fillRect(L*0.12,-0.95,0.35,1.9);
+    ctx.fillStyle='#e8eef0';[-L*0.25,0,L*0.25].forEach(x=>{ctx.fillRect(x-0.35,-2.0,0.7,0.28);});ctx.restore();
+    ctx.strokeStyle='rgba(230,230,210,.75)';ctx.lineWidth=0.06;ctx.beginPath();
+    [[m.x1-1.2,m.x1+1.5],[m.x0+1,m.x0-1.6],[m.x1-1.2,m.x0+3],[m.x0+1,m.x1-3]].forEach(([a,b])=>{const bb=BOLLARDS.reduce((p,q)=>Math.abs(q[0]-b)<Math.abs(p[0]-b)?q:p);ctx.moveTo(a,m.y0+0.4);ctx.lineTo(bb[0],bb[1]);});ctx.stroke();
+  });
+  // wake
+  ctx.fillStyle='rgba(225,245,248,1)';
+  for(const p of wake){ctx.globalAlpha=Math.max(0,p.life/p.max)*0.5;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill();}
+  ctx.globalAlpha=1;
+  // lines
+  for(const L of LINES){const ln=S.lines[L.id];if(!ln)continue;const [cx,cy]=toWorld(...cleatBody(L.at));
+    const slack=Math.max(0,ln.len-ln.d);ctx.strokeStyle=ln.T>300?'#f2a93b':'#efe6c8';ctx.lineWidth=(ln.T>300?3:2)/k+0.03;
+    const mx=(cx+ln.b[0])/2,my=(cy+ln.b[1])/2+Math.min(2.5,Math.sqrt(slack*ln.len)*0.45);
+    ctx.beginPath();ctx.moveTo(ln.b[0],ln.b[1]);ctx.quadraticCurveTo(mx,my,cx,cy);ctx.stroke();
+    if(S.sel===L.id){ctx.strokeStyle='rgba(242,169,59,.8)';ctx.lineWidth=2/k;ctx.beginPath();ctx.arc(ln.b[0],ln.b[1],0.45,0,7);ctx.stroke();}
+  }
+  // previews for reachable lines
+  const sd=sideName(facingSide());
+  if(S.prep[sd]&&!S.finished){ctx.setLineDash([0.25,0.3]);ctx.strokeStyle='rgba(242,169,59,.7)';ctx.lineWidth=1.5/k;
+    LINES.forEach(L=>{if(S.lines[L.id])return;const c=lineCandidate(L);if(c.reach&&c.b){ctx.beginPath();ctx.moveTo(c.cx,c.cy);ctx.lineTo(c.b[0],c.b[1]);ctx.stroke();}});ctx.setLineDash([]);}
+  // own boat
+  ctx.save();ctx.translate(S.x,S.y);ctx.rotate(S.psi);
+  ctx.fillStyle='rgba(0,0,0,.25)';ctx.save();ctx.translate(0.25,0.3);hullPath(10,3.4);ctx.fill();ctx.restore();
+  ctx.fillStyle='#f5f8f7';hullPath(10,3.4);ctx.fill();ctx.strokeStyle='#9fb3b7';ctx.lineWidth=1/k;ctx.stroke();
+  ctx.fillStyle='#c79d6c';ctx.save();ctx.scale(0.88,0.82);hullPath(10,3.4);ctx.fill();ctx.restore();
+  ctx.fillStyle='#e9eeee';ctx.beginPath();ctx.roundRect(-2.6,-1.15,4.4,2.3,0.4);ctx.fill();
+  ctx.fillStyle='#24414d';ctx.beginPath();ctx.moveTo(1.8,-1.1);ctx.lineTo(2.4,-0.9);ctx.lineTo(2.4,0.9);ctx.lineTo(1.8,1.1);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#f2a93b';ctx.beginPath();ctx.arc(1.1,0.55,0.2,0,7);ctx.fill(); // helm position
+  // rudder & thrust
+  ctx.save();ctx.translate(-5,0);ctx.rotate(-S.rud);ctx.strokeStyle='#f2a93b';ctx.lineWidth=0.16;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-0.9,0);ctx.stroke();ctx.restore();
+  // cleats
+  [1,-1].forEach(sg=>[['bow'],['stern']].forEach(([a])=>{const c=CLEAT[a];ctx.fillStyle='#3b4a50';ctx.fillRect(c[0]-0.18,c[1]*sg-0.07,0.36,0.14);}));
+  // fenders
+  ctx.fillStyle='#dfe9ef';ctx.strokeStyle='#5d7d8f';ctx.lineWidth=0.04;
+  [['port',-1],['stbd',1]].forEach(([n,sg])=>{if(!S.fend[n])return;[2.6,0,-2.6].forEach(x=>{ctx.beginPath();ctx.roundRect(x-0.38,sg*1.72-0.13+sg*0.12,0.76,0.26,0.13);ctx.fill();ctx.stroke();});});
+  ctx.restore();
+  // labels in screen space
+  screenT();
+  ctx.font='600 13px "Barlow Condensed",sans-serif';ctx.textAlign='center';ctx.fillStyle='rgba(30,18,8,.55)';
+  let [lx,ly]=scr(0,-8);if(ly>-10)ctx.fillText('ТОПЛИВНЫЙ ПРИЧАЛ',lx,ly);
+  [[-2.4,'ДТ'],[2.4,'АИ-95']].forEach(([x,t])=>{const [a,b]=scr(x,-3.9);ctx.fillStyle='rgba(30,18,8,.7)';ctx.font='600 11px "Barlow Condensed",sans-serif';ctx.fillText(t,a,b);});
+  [lx,ly]=scr(-g-19,9.6);ctx.textAlign='left';ctx.fillStyle='rgba(242,169,59,.8)';ctx.font='600 11px "Barlow Condensed",sans-serif';ctx.fillText('ЗОНА 10 М · ≤ 1,5 УЗ',lx,ly);
+  // scale bar
+  ctx.strokeStyle='rgba(233,242,241,.6)';ctx.lineWidth=1.5;ctx.beginPath();const sbx=14,sby=VH-14;ctx.moveTo(sbx,sby);ctx.lineTo(sbx+5*k,sby);ctx.moveTo(sbx,sby-4);ctx.lineTo(sbx,sby);ctx.moveTo(sbx+5*k,sby-4);ctx.lineTo(sbx+5*k,sby);ctx.stroke();
+  ctx.fillStyle='rgba(233,242,241,.7)';ctx.textAlign='left';ctx.fillText('5 м',sbx+5*k+6,sby+1);
+}
+
+/* ---------- loop ---------- */
+let lastT=performance.now(),hudT=0,wakeT=0;
+function frame(now){
+  let dt=Math.min(0.05,(now-lastT)/1000);lastT=now;
+  if(!paused&&S){
+    const n=Math.ceil(dt/(1/240));for(let i=0;i<n;i++)step(dt/n);
+    const [gx,gy]=vel();S.spd=Math.hypot(gx,gy)*KN;
+    let mg=99;for(const p of SAMPLES){const y=toWorld(p[0],p[1])[1];if(y<mg)mg=y;}S.gap=Math.max(0,mg);
+    // wake particles
+    wakeT-=dt;if(wakeT<=0){wakeT=0.06;const a=Math.abs(S.thr);if(a>150||S.spd>0.6){const [sx,sy]=toWorld(-5.1,(Math.random()-0.5)*0.6);const c=Math.cos(S.psi),s=Math.sin(S.psi);const w=S.thr>0?-Math.min(3,C.wash*Math.sqrt(a)):Math.min(2,a/1500);wake.push({x:sx,y:sy,vx:c*w+S.curr[0],vy:s*w+S.curr[1],r:0.15+Math.random()*0.2,life:2.6,max:2.6});}}
+    for(const p of wake){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=0.97;p.vy*=0.97;p.r+=dt*0.25;p.life-=dt;}
+    wake=wake.filter(p=>p.life>0);
+    // camera
+    const tx=S.x+gx*2.5, ty=Math.min(S.y,S.y*0.55+2);cam.x+=(tx-cam.x)*Math.min(1,dt*1.5);cam.y+=(ty-cam.y)*Math.min(1,dt*1.5);
+    hudT-=dt;if(hudT<=0){hudT=0.1;hud();evalSteps();syncButtons();}
+  }
+  if(S&&VW)draw();
+  requestAnimationFrame(frame);
+}
+function hud(){
+  $('#hSpd').textContent=S.spd.toFixed(1);
+  $('#gSpd').classList.toggle('warn',S.inZone&&S.spd>1.5&&!S.secured);
+  $('#hGap').textContent=S.gap>40?'—':S.gap.toFixed(1);
+  let h=Math.round(((S.psi/DEG)+90+360)%360);$('#hHdg').textContent=String(h).padStart(3,'0')+'°';
+  $('#hDmg').textContent=S.dmg;$('#gDmg').classList.toggle('warn',S.dmg>0);
+  const wn=Math.hypot(...S.wind)*S.gust*KN;$('#hWind').textContent=wn.toFixed(0);
+  $('#windArrow').style.transform=`rotate(${Math.atan2(S.wind[1],S.wind[0])/DEG}deg)`;
+  $('#windArrow').style.opacity=wn<0.5?0.2:1;
+  // rudder needle shows the real blade angle
+  $('#rNeedle').style.left=(50+S.rud/C.rudMax*50)+'%';
+}
+function finish(){
+  paused=true;
+  const late=steps.filter(s=>s.st==='late').length, fail=steps.filter(s=>s.st==='fail').length, todo=steps.filter(s=>s.st==='todo').length;
+  const tpen=Math.max(0,Math.round((S.t-150)/6));
+  const score=clamp(100-S.dmg-15*fail-7*late-5*todo-tpen,0,100);
+  $('#resTitle').textContent=score>=90?'Чистая швартовка':score>=70?'Ошвартованы':score>=40?'Ошвартованы, но с замечаниями':'Ошвартованы с трудом';
+  $('#resScore').textContent=score;
+  const rows=[[`Время`,`${Math.floor(S.t/60)}:${String(Math.round(S.t%60)).padStart(2,'0')}`+(tpen?` (−${tpen})`:'')],
+    ['Макс. скорость в зоне 10 м',`${S.maxZone.toFixed(1)} уз`]];
+  steps.forEach(s=>{if(s.st==='late')rows.push([s.t,'поздно, −7']);if(s.st==='fail')rows.push([s.t,'нарушено, −15']);if(s.st==='todo')rows.push([s.t,'пропущено, −5']);});
+  S.hits.forEach(h=>rows.push([h.txt,`−${h.pen}`]));
+  if(rows.length===2)rows.push(['Замечаний нет','✓']);
+  const ul=$('#resList');ul.innerHTML='';rows.forEach(([a,b])=>{const li=document.createElement('li');li.innerHTML='<span></span><span></span>';li.firstChild.textContent=a;li.lastChild.textContent=b;ul.appendChild(li);});
+  $('#result').hidden=false;
+}
+
+/* ---------- setup sheet ---------- */
+function syncSetup(){
+  document.querySelectorAll('.seg').forEach(sg=>{const k=sg.dataset.k;sg.querySelectorAll('button').forEach(b=>{b.type='button';b.classList.toggle('on',String(SC[k])===b.dataset.v);});});
+  $('#wKn').value=SC.wKn;$('#wKnO').textContent=SC.wKn+' уз';
+  $('#cKn').value=SC.cKn;$('#cKnO').textContent=(+SC.cKn).toFixed(1)+' уз';
+  $('#gapM').value=SC.gap;$('#gapMO').textContent=SC.gap+' м';
+}
+document.querySelectorAll('.seg').forEach(sg=>sg.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const k=sg.dataset.k;SC[k]=k==='pw'?+b.dataset.v:b.dataset.v;syncSetup();}));
+$('#wKn').oninput=e=>{SC.wKn=+e.target.value;syncSetup();};
+$('#cKn').oninput=e=>{SC.cKn=+e.target.value;syncSetup();};
+$('#gapM').oninput=e=>{SC.gap=+e.target.value;syncSetup();};
+function start(){try{localStorage.setItem('berth-sc',JSON.stringify(SC));}catch(e){}reset();$('#setup').hidden=true;$('#result').hidden=true;paused=false;syncLever();syncRudder();
+  try{navigator.wakeLock&&navigator.wakeLock.request('screen').catch(()=>{});}catch(e){}
+  toast(`Курс к причалу. Борт: ${SC.side==='port'?'левый':'правый'}. Не забудьте кранцы и концы.`);}
+$('#start').onclick=start;
+$('#again').onclick=start;
+$('#toSetup').onclick=()=>{$('#result').hidden=true;$('#setup').hidden=false;paused=true;};
+$('#setBtn').onclick=()=>{paused=true;syncSetup();$('#setup').hidden=false;};
+
+syncSetup();reset();resize();syncLever();syncRudder();hud();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
