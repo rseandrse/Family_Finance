@@ -52,8 +52,36 @@ button:focus-visible,.track:focus-visible{outline:2px solid var(--brass);outline
 #toast.on{opacity:1} #toast.bad{border-color:var(--bad)} #toast.good{border-color:var(--ok)}
 
 /* helm console */
-#deck{display:grid;grid-template-columns:64px minmax(0,1fr) 124px;grid-template-areas:"lever info wheel" "lever crew crew" "lever lines lines" "lever act act";gap:8px 10px;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:var(--console);border-top:1px solid var(--rule);max-width:760px;width:100%;margin:0 auto;box-sizing:border-box}
-#lever{grid-area:lever} #helmInfo{grid-area:info;align-self:center} #wheel{grid-area:wheel} #crewRow{grid-area:crew} #lineRow{grid-area:lines} #actRow{grid-area:act}
+#deck{display:grid;grid-template-columns:64px minmax(0,1fr) 124px;grid-template-areas:"lever info wheel" "lever mini mini" "lever act act";gap:8px 10px;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:var(--console);border-top:1px solid var(--rule);max-width:760px;width:100%;margin:0 auto;box-sizing:border-box}
+#lever{grid-area:lever} #helmInfo{grid-area:info;align-self:center} #wheel{grid-area:wheel} #actRow{grid-area:act}
+#mini{grid-area:mini;width:100%;height:auto;display:block;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+#mini .hit{cursor:pointer}
+#mini .m-hitpad{fill:transparent}
+#mini .m-hull{fill:#e9efee;stroke:#8fa5aa;stroke-width:1}
+#mini .m-deck{fill:#c79d6c}
+#mini .m-cabin{fill:#dfe6e6}
+#mini .m-cleat{fill:#3b4a50}
+#mini .m-note{font:600 9px var(--f-disp);letter-spacing:.08em;fill:#4b3a28}
+#mini .m-side{font:600 9px var(--f-disp);letter-spacing:.1em;fill:#6d7f85}
+#mini .m-side.face{fill:#b0661a}
+#mini .m-fend rect:not(.m-hitpad){fill:none;stroke:#7d98a6;stroke-width:1.2;stroke-dasharray:3 2}
+#mini .m-fend.on rect:not(.m-hitpad){fill:#dfe9ef;stroke:#5d7d8f;stroke-dasharray:none}
+#mini .m-coil circle{fill:none;stroke:#7d6a55;stroke-width:1.5;stroke-dasharray:3 2}
+#mini .m-coil.on circle{stroke:#f2a93b;stroke-dasharray:none;stroke-width:2}
+#mini .m-line{stroke:transparent;stroke-width:1.5}
+#mini .m-line.reach{stroke:var(--brass);stroke-dasharray:3 3}
+#mini .m-line.on{stroke:#efe6c8;stroke-dasharray:none;stroke-width:2}
+#mini .m-line.taut{stroke:var(--brass);stroke-width:2.5}
+#mini .chip rect{fill:var(--panel);stroke:var(--rule);stroke-width:1}
+#mini .chip text{font:600 9.5px var(--f-disp);letter-spacing:.05em;fill:var(--fg)}
+#mini .chip.dim{opacity:.35}
+#mini .chip.reach rect{stroke:var(--brass);stroke-width:2;animation:chipPulse .8s infinite alternate}
+#mini .chip.given rect{fill:#efe6c8;stroke:#efe6c8} #mini .chip.given text{fill:#1a1205}
+#mini .chip.taut rect{fill:var(--brass);stroke:var(--brass)}
+#mini .chip.sel rect{stroke:#fff;stroke-width:2.5}
+@keyframes chipPulse{to{fill:#4a3512}}
+#micBtn.live{border-color:var(--bad);background:#3a1414}
+#micBtn.live svg{stroke:var(--bad)}
 .lbl{font:500 10px/1 var(--f-disp);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 #lever{position:relative;height:100%;min-height:180px;border-radius:10px;background:var(--panel);border:1px solid var(--rule);touch-action:none;cursor:ns-resize}
 #lever .mark{position:absolute;left:0;right:0;text-align:center;font:600 10px var(--f-disp);letter-spacing:.1em;color:var(--muted)}
@@ -110,7 +138,7 @@ button:focus-visible,.track:focus-visible{outline:2px solid var(--brass);outline
 @media (orientation:landscape) and (max-height:600px){
   #app{display:grid;gap:6px 10px;padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px));padding-block:6px;box-sizing:border-box;
     grid-template-columns:minmax(150px,21vw) minmax(0,1fr) minmax(170px,24vw);grid-template-rows:auto minmax(0,1fr) auto auto;
-    grid-template-areas:"lever hud info" "lever view wheel" "crew view wheel" "act view lines"}
+    grid-template-areas:"lever hud info" "lever view wheel" "act view wheel" "act view mini"}
   #deck{display:contents}
   #hud{grid-area:hud;padding:0 0 4px;border-bottom:0}
   #view{grid-area:view;border-radius:10px;overflow:hidden;border:1px solid var(--rule)}
@@ -118,6 +146,8 @@ button:focus-visible,.track:focus-visible{outline:2px solid var(--brass);outline
   #helmInfo{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:4px 8px;align-self:start}
   #helmInfo .lbl{grid-column:1/-1}
   #helmInfo #rudder{grid-column:2} #helmInfo #center{grid-column:1/-1;min-height:30px}
+  #mini{align-self:end}
+  #actRow{align-self:end}
   #wheel{width:min(150px,100%);height:auto;aspect-ratio:1;max-height:100%;justify-self:center}
   .row.r4{grid-template-columns:repeat(2,minmax(0,1fr))}
   .btn{min-height:32px}
@@ -148,6 +178,7 @@ button:focus-visible,.track:focus-visible{outline:2px solid var(--brass);outline
       <button id="setBtn" type="button" aria-label="Сценарий">☰</button>
       <button id="sndBtn" type="button" aria-label="Звук двигателя"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></svg></button>
       <button id="vibBtn" type="button" aria-label="Вибрация"><svg viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="18" rx="2"/><path class="wave" d="M4 8v8M20 8v8M1.5 10v4M22.5 10v4"/></svg></button>
+      <button id="micBtn" type="button" aria-label="Голосовые команды" aria-pressed="false"><svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
     </div>
     <div id="toast" role="status" aria-live="polite"></div>
   </div>
@@ -174,13 +205,7 @@ button:focus-visible,.track:focus-visible{outline:2px solid var(--brass);outline
         <circle r="4" fill="#f2a93b"/>
       </g></svg>
     </div>
-    <div class="row r4" id="crewRow">
-      <button class="btn" id="fP" type="button">Кранцы<small>левый борт</small></button>
-      <button class="btn" id="fS" type="button">Кранцы<small>правый борт</small></button>
-      <button class="btn" id="pP" type="button">Концы<small>левый борт</small></button>
-      <button class="btn" id="pS" type="button">Концы<small>правый борт</small></button>
-    </div>
-    <div class="row r4" id="lineRow"></div>
+    <svg id="mini" viewBox="0 0 300 136" aria-label="Схема лодки: кранцы, концы и швартовы"></svg>
     <div class="row r4" id="actRow">
       <button class="btn" id="lIn" type="button">Выбрать<small>−0,25 м</small></button>
       <button class="btn" id="lOut" type="button">Потравить<small>+0,25 м</small></button>
@@ -204,7 +229,8 @@ button:focus-visible,.track:focus-visible{outline:2px solid var(--brass);outline
     <ul class="tips">
       <li>Рычаг слева: вверх — вперёд, середина — нейтраль, вниз — реверс.</li>
       <li>Руль работает от потока винта: короткий толчок газом разворачивает даже на месте.</li>
-      <li>Концы подаются, когда кнехт лодки в 1,8 м от причала: кнопка подсветится жёлтым.</li>
+      <li>Кранцы, концы и швартовы — на схеме лодки внизу: тапните кранец, бухту «концы» или нужный швартов. Швартов подаётся, когда кнехт в 1,8 м от причала: он начнёт мигать.</li>
+      <li>Микрофон справа на карте — голосовые команды: «кранцы на левый борт», «концы на левый борт», «малый вперёд», «стоп», «право двадцать», «руль прямо», «подать носовой шпринг», «выбрать кормовой», «отдать носовой», «заглушить двигатель». Экипаж отвечает голосом.</li>
       <li>Звук двигателя и вибрация включаются кнопками справа на карте. На iPhone звука не будет, если включён беззвучный режим.</li>
       <li>Приём «на шпринг»: подан носовой шпринг, малый вперёд, руль от причала — корма прижимается.</li>
     </ul>
@@ -270,7 +296,7 @@ function reset(){
     inZone:false,maxZone:0,hits:[],secureT:0,secured:false,finished:false,lastToast:{},gap:99,spd:0,offT:0};
   steps=makeSteps();
   wake=[];cam.x=S.x*0.5;cam.y=12;
-  renderLineRow();renderChecklist();syncButtons();
+  renderChecklist();syncButtons();
 }
 
 /* ---------- checklist ---------- */
@@ -408,7 +434,7 @@ function step(dt){
     const dx=px-ln.b[0],dy=py-ln.b[1],d=Math.hypot(dx,dy);ln.d=d;ln.T=0;
     if(d>ln.len&&d>1e-3){const ex=dx/d,ey=dy/d;const Tn=Math.max(0,C.kLine*(d-ln.len)+C.cLine*(vx*ex+vy*ey));ln.T=Tn;
       EX-=Tn*ex;EY-=Tn*ey;N+=rx*(-Tn*ey)-ry*(-Tn*ex);
-      if(Tn>C.breakT){delete S.lines[L.id];S.dmg+=8;S.hits.push({txt:'Лопнул '+L.name.toLowerCase()+' '+L.sub,pen:8});toast(`Лопнул ${L.name.toLowerCase()} ${L.sub}! Слишком большая нагрузка.`,'bad');thump(0.8,200);buzz(200);renderLineRow();}}
+      if(Tn>C.breakT){delete S.lines[L.id];S.dmg+=8;S.hits.push({txt:'Лопнул '+L.name.toLowerCase()+' '+L.sub,pen:8});toast(`Лопнул ${L.name.toLowerCase()} ${L.sub}! Слишком большая нагрузка.`,'bad');thump(0.8,200);buzz(200);syncButtons();}}
   }
   Fx+=c*EX+s*EY;Fy+=-s*EX+c*EY;
   S.u+=(Fx+C.my*v*r)/C.mx*dt;
@@ -475,62 +501,180 @@ document.addEventListener('keydown',e=>{
   else if(k===' '){S.lever=0;syncLever();e.preventDefault();}
   else if(k==='c'){S.helm=0;syncRudder();}
 });
-const tog=(o,k,on,off)=>{o[k]=!o[k];toast(o[k]?on:off);syncButtons();};
-$('#fP').onclick=()=>tog(S.fend,'port','Кранцы вывешены на левый борт','Кранцы левого борта убраны');
-$('#fS').onclick=()=>tog(S.fend,'stbd','Кранцы вывешены на правый борт','Кранцы правого борта убраны');
-$('#pP').onclick=()=>tog(S.prep,'port','Швартовы разнесены по левому борту','Швартовы левого борта убраны');
-$('#pS').onclick=()=>tog(S.prep,'stbd','Швартовы разнесены по правому борту','Швартовы правого борта убраны');
-$('#eng').onclick=()=>{
-  if(S.engine){if(S.lever!==0){toast('Сначала рычаг в нейтраль','bad');return;}S.engine=false;buzz(60);toast(S.secured?'Двигатель заглушён':'Двигатель заглушён — лодка без хода!',S.secured?'good':'bad');}
-  else{S.engine=true;S.crank=0.9;sndInit();toast('Двигатель запущен');}
-  syncButtons();
-};
-function renderLineRow(){
-  const row=$('#lineRow');row.innerHTML='';
-  LINES.forEach(L=>{const b=document.createElement('button');b.type='button';b.className='btn';b.id='ln-'+L.id;b.innerHTML=`${L.name}<small>${L.sub}</small>`;
-    b.onclick=()=>lineTap(L);row.appendChild(b);});
+/* ---------- crew: replies aloud ---------- */
+let ruVoice=null;
+function pickVoice(){try{const vs=speechSynthesis.getVoices();ruVoice=vs.find(v=>/^ru/i.test(v.lang))||null;}catch(e){}}
+try{pickVoice();speechSynthesis.onvoiceschanged=pickVoice;}catch(e){}
+function say(text){
+  if(!FX.snd||!FX.voice||!('speechSynthesis' in window))return;
+  try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='ru-RU';if(ruVoice)u.voice=ruVoice;u.rate=1.1;speechSynthesis.speak(u);}catch(e){}
+}
+// a crew action: shown on screen and, if sound is on, answered aloud ("Есть, ...")
+function crew(msg,kind,reply){toast(msg,kind);if(reply)say(reply);}
+const sideRu=(sd,c)=>sd==='port'?(c==='gen'?'левого':c==='loc'?'левом':'левый'):(c==='gen'?'правого':c==='loc'?'правом':'правый');
+const lineName=L=>`${L.name==='Нос.'?'носовой':L.name==='Корм.'?'кормовой':L.name.toLowerCase()} ${L.sub}`.replace(' швартов','');
+
+/* ---------- crew actions ---------- */
+function setFenders(sd,on){if(S.fend[sd]===on){crew(`Кранцы ${sideRu(sd,'gen')} борта уже ${on?'вывешены':'убраны'}`,'',`Кранцы уже ${on?'за бортом':'убраны'}`);return;}
+  S.fend[sd]=on;crew(on?`Кранцы вывешены на ${sideRu(sd)} борт`:`Кранцы ${sideRu(sd,'gen')} борта убраны`,'',on?`Есть, кранцы на ${sideRu(sd)} борт`:'Есть, кранцы убраны');syncButtons();}
+function setPrep(sd,on){if(S.prep[sd]===on){crew(`Швартовы на ${sideRu(sd,'loc')} борту уже ${on?'готовы':'убраны'}`);return;}
+  S.prep[sd]=on;crew(on?`Швартовы разнесены по ${sideRu(sd,'gen').replace('ого','ому')} борту`:`Швартовы ${sideRu(sd,'gen')} борта убраны`,'',on?`Есть, концы на ${sideRu(sd)} борт`:'Есть, концы убраны');syncButtons();}
+$('#eng').onclick=()=>engCmd(!S.engine);
+function engCmd(on){
+  if(!on&&S.engine){if(S.lever!==0){crew('Сначала рычаг в нейтраль','bad');return;}S.engine=false;buzz(60);crew(S.secured?'Двигатель заглушён':'Двигатель заглушён — лодка без хода!',S.secured?'good':'bad','Есть, двигатель заглушён');}
+  else if(on&&!S.engine){S.engine=true;S.crank=0.9;sndInit();crew('Двигатель запущен','','Двигатель запущен');}
   syncButtons();
 }
-function lineTap(L){
-  if(S.lines[L.id]){S.sel=S.sel===L.id?null:L.id;syncButtons();return;}
+function lineTap(L,quiet){
+  if(S.lines[L.id]){S.sel=S.sel===L.id&&!quiet?null:L.id;syncButtons();return;}
   const sd=sideName(facingSide());
-  if(!S.prep[sd]){toast(`Швартовы не подготовлены на ${sd==='port'?'левом':'правом'} борту`,'bad');return;}
+  if(!S.prep[sd]){crew(`Швартовы не подготовлены на ${sideRu(sd,'loc')} борту`,'bad','Концы не готовы');return;}
   const cand=lineCandidate(L);
-  if(!cand.reach){toast(`До причала ${Math.max(0,cand.cy).toFixed(1)} м от кнехта — матрос не дотянется (нужно ≤ ${C.reach} м)`,'bad');return;}
-  if(!cand.b){toast('Нет подходящей тумбы в нужном направлении','bad');return;}
+  if(!cand.reach){crew(`До причала ${Math.max(0,cand.cy).toFixed(1)} м от кнехта — матрос не дотянется (нужно ≤ ${C.reach} м)`,'bad','Не достаю');return;}
+  if(!cand.b){crew('Нет подходящей тумбы в нужном направлении','bad','Нет тумбы');return;}
   const d=Math.hypot(cand.b[0]-cand.cx,cand.b[1]-cand.cy);
   S.lines[L.id]={b:cand.b,len:d+0.3,d,T:0};S.sel=L.id;
-  toast(`${L.name} ${L.sub} заведён на тумбу и закреплён`,'good');syncButtons();
+  crew(`${L.name} ${L.sub} заведён на тумбу и закреплён`,'good',`${lineName(L)} завёл`);syncButtons();
 }
+function releaseLine(id){const L=LINES.find(l=>l.id===id);if(!S.lines[id]){crew(`${L.name} ${L.sub} не заведён`);return;}
+  delete S.lines[id];if(S.sel===id)S.sel=null;crew(`${L.name} ${L.sub} отдан`,'',`Есть отдать ${lineName(L)}`);syncButtons();}
 function repeatBtn(el,fn){let iv;const stop=()=>{clearInterval(iv);iv=null;};
   el.addEventListener('pointerdown',e=>{e.preventDefault();fn();iv=setInterval(fn,160);});
   ['pointerup','pointerleave','pointercancel'].forEach(t=>el.addEventListener(t,stop));
   el.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();fn();}});}
 repeatBtn($('#lIn'),()=>adjLine(-0.25));
 repeatBtn($('#lOut'),()=>adjLine(0.25));
-function adjLine(dl){const ln=S.sel&&S.lines[S.sel];if(!ln){toast('Выберите заведённый конец');return;}
-  if(dl<0&&ln.T>9000){toast('Конец под большой нагрузкой — руками не выбрать','bad','adj');return;}
-  ln.len=clamp(ln.len+dl,0.6,C.lineMax);}
-$('#lOff').onclick=()=>{if(!S.sel||!S.lines[S.sel]){toast('Выберите заведённый конец');return;}const L=LINES.find(l=>l.id===S.sel);delete S.lines[S.sel];S.sel=null;toast(`${L.name} ${L.sub} отдан`);syncButtons();};
+function adjLine(dl,id){const ln=S.lines[id||S.sel];if(!ln){crew('Выберите заведённый конец на схеме лодки');return false;}
+  if(dl<0&&ln.T>9000){toast('Конец под большой нагрузкой — руками не выбрать','bad','adj');return false;}
+  ln.len=clamp(ln.len+dl,0.6,C.lineMax);return true;}
+$('#lOff').onclick=()=>{if(!S.sel||!S.lines[S.sel]){crew('Выберите заведённый конец на схеме лодки');return;}releaseLine(S.sel);};
+
+/* ---------- boat diagram: tap fenders, line coils and lines ---------- */
+// Fixed view: bow to the right, port side on top. Hull scaled 24 px/m along, 22 px/m across.
+const mini=$('#mini'),NS='http://www.w3.org/2000/svg';
+const MX=bx=>150+bx*24, MY=by=>67+by*22;
+const MINI={};
+function el(tag,attrs,parent){const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);(parent||mini).appendChild(e);return e;}
+(function buildMini(){
+  el('path',{d:'M'+HULL.map(p=>MX(p[0])+' '+MY(p[1])).join(' L')+' Z',class:'m-hull'});
+  el('path',{d:'M'+HULL.map(p=>MX(p[0]*0.88)+' '+MY(p[1]*0.8)).join(' L')+' Z',class:'m-deck'});
+  el('rect',{x:MX(-2.6),y:MY(-1.15),width:4.4*24,height:2.3*22,rx:8,class:'m-cabin'});
+  const bowT=el('text',{x:MX(5)-4,y:MY(0)+4,class:'m-note','text-anchor':'end'});bowT.textContent='НОС';
+  const sternT=el('text',{x:MX(-5)+5,y:MY(0)+4,class:'m-note'});sternT.textContent='КОРМА';
+  [['port',-1],['stbd',1]].forEach(([sd,sg])=>{
+    const sideL=el('text',{x:MX(-0.4),y:MY(sg*0.62)+3.5,class:'m-side','text-anchor':'middle'});sideL.textContent=sg<0?'ЛЕВЫЙ БОРТ':'ПРАВЫЙ БОРТ';
+    MINI[sd]={side:sideL,lines:{}};
+    // fenders (one tap target per side)
+    const fg=el('g',{class:'m-fend hit',role:'button','aria-label':`Кранцы, ${sideRu(sd)} борт`});
+    [2.6,0,-2.6].forEach(x=>{el('rect',{x:MX(x)-11,y:MY(sg*1.72)-4,width:22,height:8,rx:4},fg);});
+    el('rect',{x:MX(-3.4),y:MY(sg*1.72)-10,width:6.8*24,height:20,class:'m-hitpad'},fg);
+    fg.addEventListener('click',()=>setFenders(sd,!S.fend[sd]));MINI[sd].fend=fg;
+    // line coil on deck
+    const cg=el('g',{class:'m-coil hit',role:'button','aria-label':`Подготовить швартовы, ${sideRu(sd)} борт`});
+    el('circle',{cx:MX(-3.6),cy:MY(sg*1.0),r:6.5},cg);el('circle',{cx:MX(-3.6),cy:MY(sg*1.0),r:2.8},cg);
+    const ct=el('text',{x:MX(-3.6)+10,y:MY(sg*1.0)+3.5,class:'m-note'},cg);ct.textContent='концы';
+    el('rect',{x:MX(-3.6)-10,y:MY(sg*1.0)-10,width:52,height:20,class:'m-hitpad'},cg);
+    cg.addEventListener('click',()=>setPrep(sd,!S.prep[sd]));MINI[sd].coil=cg;
+    // cleats
+    Object.values(CLEAT).forEach(c=>el('rect',{x:MX(c[0])-4,y:MY(sg*c[1])-2,width:8,height:4,rx:1,class:'m-cleat'}));
+    // lines: from the cleat out to a chip in the band beyond the side
+    const chipX={bow:268,bowS:205,strS:95,stern:32};
+    LINES.forEach(L=>{
+      const c=CLEAT[L.at],x0=MX(c[0]),y0=MY(sg*c[1]),cy=sg<0?11:125;
+      const ln=el('line',{x1:x0,y1:y0,x2:chipX[L.id],y2:cy,class:'m-line'});
+      const g=el('g',{class:'chip hit',role:'button','aria-label':`${L.name} ${L.sub}, ${sideRu(sd)} борт`});
+      el('rect',{x:chipX[L.id]-24,y:cy-9,width:48,height:18,rx:5},g);
+      const t=el('text',{x:chipX[L.id],y:cy+3.5,'text-anchor':'middle'},g);t.textContent={bow:'НОСОВОЙ',bowS:'Н.ШПРИНГ',strS:'К.ШПРИНГ',stern:'КОРМОВОЙ'}[L.id];
+      g.addEventListener('click',()=>{if(sideName(facingSide())!==sd){crew('Этот борт не у причала','bad');return;}lineTap(L);});
+      MINI[sd].lines[L.id]={g,ln};
+    });
+  });
+})();
 function syncButtons(){
   if(!S)return;
-  $('#fP').classList.toggle('on',S.fend.port);$('#fS').classList.toggle('on',S.fend.stbd);
-  $('#pP').classList.toggle('on',S.prep.port);$('#pS').classList.toggle('on',S.prep.stbd);
   const e=$('#eng');e.classList.toggle('off',!S.engine);e.querySelector('small').textContent=S.engine?'работает':'заглушён';
-  const sd=sideName(facingSide());
-  LINES.forEach(L=>{const b=$('#ln-'+L.id);if(!b)return;const ln=S.lines[L.id];
-    b.classList.toggle('on',!!ln);b.classList.toggle('sel',S.sel===L.id);
-    let reach=false;if(!ln&&S.prep[sd]){const c=lineCandidate(L);reach=c.reach&&!!c.b;}
-    b.classList.toggle('reach',reach);
-    const sm=b.querySelector('small');
-    if(ln){b.classList.toggle('taut',ln.T>300);sm.textContent=ln.T>300?`${(ln.T/9.81).toFixed(0)} кгс`:'слабина';}
-    else{b.classList.remove('taut');sm.textContent=reach?'подать':L.sub;}
+  const face=sideName(facingSide());
+  ['port','stbd'].forEach(sd=>{
+    const m=MINI[sd],isFace=sd===face;
+    m.fend.classList.toggle('on',S.fend[sd]);m.coil.classList.toggle('on',S.prep[sd]);
+    m.side.textContent=(sd==='port'?'ЛЕВЫЙ БОРТ':'ПРАВЫЙ БОРТ')+(isFace?' · ПРИЧАЛ':'');m.side.classList.toggle('face',isFace);
+    LINES.forEach(L=>{const {g,ln:line}=m.lines[L.id];const ln=isFace?S.lines[L.id]:null;
+      let reach=false;if(isFace&&!ln&&S.prep[sd]){const c=lineCandidate(L);reach=c.reach&&!!c.b;}
+      g.classList.toggle('given',!!ln);g.classList.toggle('taut',!!ln&&ln.T>300);g.classList.toggle('sel',!!ln&&S.sel===L.id);
+      g.classList.toggle('reach',reach);g.classList.toggle('dim',!isFace||!S.prep[sd]);
+      line.classList.toggle('on',!!ln);line.classList.toggle('taut',!!ln&&ln.T>300);line.classList.toggle('reach',reach);
+    });
   });
   const has=S.sel&&S.lines[S.sel];['#lIn','#lOut','#lOff'].forEach(id=>$(id).disabled=!has);
 }
 
+/* ---------- voice commands ---------- */
+const NUMW={'пять':5,'десять':10,'пятнадцать':15,'двадцать':20,'двадцать пять':25,'тридцать':30,'тридцать пять':35};
+function voiceCmd(raw){
+  if(!S||paused)return;
+  const t=' '+raw.toLowerCase().replace(/ё/g,'е').replace(/[.,!?;:«»"]/g,' ').replace(/\s+/g,' ').trim()+' ';
+  if(!t.trim())return;
+  if(/^ есть /.test(t))return;               // the crew's own reply picked up by the microphone
+  const has=(...w)=>w.some(x=>t.includes(x));
+  const sd=/ лев/.test(t)?'port':/ прав/.test(t)?'stbd':null;
+  toast(`Команда: «${raw.trim()}»`);
+  // engine
+  if(has('заглуш','выключ')&&!has('кранц'))return engCmd(false);
+  if(has('запуст','заведи двиг','заводи','старт'))return engCmd(true);
+  // rudder: the bare words "лево"/"право" (not "левый"/"правый")
+  const rl=/ (лево|влево|налево) /.test(t)?-1:/ (право|вправо|направо) /.test(t)?1:0;
+  if(has('руль прямо','прямо руль','прямо по курсу','одерживай')){S.helm=0;syncRudder();say('Есть прямо');return;}
+  if(rl){let deg=15;if(has('на борт'))deg=35;else{const m=t.match(/(\d+)/);if(m)deg=+m[1];else for(const w of Object.keys(NUMW).sort((a,b)=>b.length-a.length)){if(t.includes(' '+w+' ')){deg=NUMW[w];break;}}}
+    deg=clamp(deg,0,35);S.helm=rl*deg*DEG;syncRudder();say(`Есть ${rl<0?'лево':'право'} ${deg}`);return;}
+  // throttle
+  const dir=has('вперед')?1:has('назад')?-1:0;
+  const lvl=has('самый малый')?0.12:has('малый')?0.2:has('средний')?0.45:has('полный')?0.85:null;
+  if(dir&&lvl!==null||dir&&!sd&&!has('носов','кормов','шпринг')){S.lever=dir*(lvl??0.2);syncLever();say(`Есть ${lvl===0.12?'самый малый':lvl===0.45?'средний':lvl===0.85?'полный':'малый'} ${dir>0?'вперёд':'назад'}`);return;}
+  if(has('нейтрал','стоп ','стоп')&&!has('шпринг')){S.lever=0;syncLever();say('Есть стоп');return;}
+  // fenders and lines preparation
+  const off=has('убра','убер','сним','снять','поднять','подними');
+  if(has('кранц')){if(!sd){crew('На какой борт кранцы?','bad','На какой борт?');return;}setFenders(sd,!off);return;}
+  if(has('концы','швартовы','подготов','разнес','разложи')&&!has('носов','кормов','шпринг')){if(!sd){crew('На какой борт концы?','bad','На какой борт?');return;}setPrep(sd,!off);return;}
+  // mooring lines
+  let id=null;
+  if(has('шпринг'))id=has('кормов')?'strS':has('носов')?'bowS':(S.lines.bowS||!lineCandidate(LINES[1]).reach)&&!S.lines.strS?'strS':'bowS';
+  else if(has('носов'))id='bow';else if(has('кормов'))id='stern';
+  if(id){const L=LINES.find(l=>l.id===id);
+    if(!S.lines[id]&&has('отда','сбрось','сними','снять','выбер','выбра','выбир','подтян','потрав','трави','ослаб')){crew(`${L.name} ${L.sub} не заведён`,'bad');return;}
+    if(has('отда','сбрось','сними','снять')){releaseLine(id);return;}
+    if(has('выбер','выбра','выбир','подтян')){if(adjLine(-0.5,id)){S.sel=id;say(`Есть выбрать ${lineName(L)}`);}syncButtons();return;}
+    if(has('потрав','трави','ослаб')){if(adjLine(0.5,id)){S.sel=id;say(`Есть потравить ${lineName(L)}`);}syncButtons();return;}
+    lineTap(L,true);return;}
+  crew(`Не понял команду: «${raw.trim()}»`,'bad');
+}
+window.berthVoice=voiceCmd; // handy for testing commands from the console
+let DICT=null,dictNoLang=false,rec=null,recOn=false;
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+function setMic(on){$('#micBtn').classList.toggle('live',on);$('#micBtn').setAttribute('aria-pressed',String(on));}
+try{if(window.claude&&typeof window.claude.use==='function'){window.claude.use('dictation').then(d=>{if(!d)return;DICT=d;
+  d.onFinal(({text})=>voiceCmd(text));
+  d.onState(({state,reason})=>{setMic(state!=='idle');if(reason==='unavailable'&&!dictNoLang){dictNoLang=true;}else if(reason==='unavailable'){DICT=null;}});
+}).catch(()=>{});}}catch(e){}
+$('#micBtn').onclick=()=>{
+  if(DICT){if(DICT.active()){DICT.stop().catch(()=>{});return;}
+    DICT.start(dictNoLang?undefined:{language:'ru'}).then(()=>toast('Слушаю команды. Пример: «кранцы на левый борт», «малый вперёд», «подать носовой шпринг»')).catch(e=>{
+      if(e&&e.code==='unavailable'&&!dictNoLang){dictNoLang=true;toast('Нажмите микрофон ещё раз');}
+      else if(e&&e.code==='not_granted')toast('Микрофон не разрешён для этой страницы','bad');
+      else toast('Голосовые команды сейчас недоступны','bad');});
+    return;}
+  if(SR){
+    if(recOn){recOn=false;try{rec.stop();}catch(e){}setMic(false);return;}
+    rec=new SR();rec.lang='ru-RU';rec.continuous=true;rec.interimResults=false;
+    rec.onresult=ev=>{for(let i=ev.resultIndex;i<ev.results.length;i++)if(ev.results[i].isFinal)voiceCmd(ev.results[i][0].transcript);};
+    rec.onerror=ev=>{if(ev.error==='not-allowed'||ev.error==='service-not-allowed'||ev.error==='audio-capture'){recOn=false;setMic(false);toast('Нет доступа к микрофону. Разрешите его для этой страницы в настройках браузера.','bad');}};
+    rec.onend=()=>{if(recOn){try{rec.start();}catch(e){recOn=false;setMic(false);}}else setMic(false);};
+    try{rec.start();recOn=true;setMic(true);toast('Слушаю команды. Пример: «кранцы на левый борт», «малый вперёд», «подать носовой шпринг»');}catch(e){toast('Микрофон недоступен','bad');}
+    return;}
+  toast('Этот браузер не распознаёт речь. Попробуйте Chrome или Safari.','bad');
+};
+
 /* ---------- engine sound & vibration ---------- */
-const FX={snd:true,vib:true,ac:null,rpm:0,gear:0,vibT:0};
+const FX={snd:true,vib:true,voice:true,ac:null,rpm:0,gear:0,vibT:0};
 try{const f=JSON.parse(localStorage.getItem('berth-fx')||'null');if(f){FX.snd=!!f.snd;FX.vib=!!f.vib;}}catch(e){}
 const canVibrate=typeof navigator.vibrate==='function';
 let hx=null;
