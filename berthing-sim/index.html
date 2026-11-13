@@ -3,7 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
 <style>
-/* Layout: one-screen sim — instrument strip on top, chart-view harbour canvas, helm console below (throttle lever left, rudder + crew actions right). Single deliberate night-console look. */
+/* Layout: one-screen sim — instrument strip on top, chart-view harbour canvas, helm console below (throttle lever left, wheel right); landscape puts controls either side of the harbour. Single deliberate night-console look. */
 :root{
   --water:#0e3a4c; --water-hi:#1b5a70; --console:#0b161c; --panel:#13232b; --rule:#264050;
   --fg:#e9f2f1; --muted:#8eaeb6; --brass:#f2a93b; --ok:#52d38f; --bad:#ff6363; --wood:#9b7651; --wood-dk:#6e5137;
@@ -52,7 +52,8 @@ button:focus-visible,.track:focus-visible{outline:2px solid var(--brass);outline
 #toast.on{opacity:1} #toast.bad{border-color:var(--bad)} #toast.good{border-color:var(--ok)}
 
 /* helm console */
-#deck{display:grid;grid-template-columns:64px 1fr;gap:10px;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:var(--console);border-top:1px solid var(--rule);max-width:760px;width:100%;margin:0 auto;box-sizing:border-box}
+#deck{display:grid;grid-template-columns:64px minmax(0,1fr) 124px;grid-template-areas:"lever info wheel" "lever crew crew" "lever lines lines" "lever act act";gap:8px 10px;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:var(--console);border-top:1px solid var(--rule);max-width:760px;width:100%;margin:0 auto;box-sizing:border-box}
+#lever{grid-area:lever} #helmInfo{grid-area:info;align-self:center} #wheel{grid-area:wheel} #crewRow{grid-area:crew} #lineRow{grid-area:lines} #actRow{grid-area:act}
 .lbl{font:500 10px/1 var(--f-disp);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 #lever{position:relative;height:100%;min-height:180px;border-radius:10px;background:var(--panel);border:1px solid var(--rule);touch-action:none;cursor:ns-resize}
 #lever .mark{position:absolute;left:0;right:0;text-align:center;font:600 10px var(--f-disp);letter-spacing:.1em;color:var(--muted)}
@@ -60,9 +61,7 @@ button:focus-visible,.track:focus-visible{outline:2px solid var(--brass);outline
 #lever .notch{position:absolute;left:14px;right:14px;top:50%;height:2px;background:var(--rule)}
 #knob{position:absolute;left:8px;right:8px;height:34px;margin-top:-17px;border-radius:8px;background:linear-gradient(#2c4652,#1a2e37);border:1px solid #4b6b78;display:grid;place-items:center;font:700 14px var(--f-disp);font-variant-numeric:tabular-nums;pointer-events:none}
 #knob.fwd{border-color:var(--ok)} #knob.rev{border-color:var(--bad)}
-.right{display:flex;flex-direction:column;gap:8px;min-width:0}
-#helm{display:flex;gap:12px;align-items:center}
-#wheel{flex:none;width:120px;height:120px;touch-action:none;cursor:grab;border-radius:50%}
+#wheel{width:124px;height:124px;align-self:center;justify-self:end;touch-action:none;cursor:grab;border-radius:50%}
 #wheel:active{cursor:grabbing}
 #wheel svg{width:100%;height:100%;display:block;overflow:visible}
 #wheelG{transform-origin:0 0}
@@ -107,6 +106,23 @@ button:focus-visible,.track:focus-visible{outline:2px solid var(--brass);outline
 #resList li{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid var(--rule);padding-bottom:4px}
 #resList li span:last-child{white-space:nowrap;font-variant-numeric:tabular-nums;color:var(--muted)}
 @media (max-height:640px){ #lever{min-height:150px} .btn{min-height:34px} .g b{font-size:19px} }
+/* Landscape phone: throttle + crew on the left, harbour in the middle, wheel + lines on the right */
+@media (orientation:landscape) and (max-height:600px){
+  #app{display:grid;gap:6px 10px;padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px));padding-block:6px;box-sizing:border-box;
+    grid-template-columns:minmax(150px,21vw) minmax(0,1fr) minmax(170px,24vw);grid-template-rows:auto minmax(0,1fr) auto auto;
+    grid-template-areas:"lever hud info" "lever view wheel" "crew view wheel" "act view lines"}
+  #deck{display:contents}
+  #hud{grid-area:hud;padding:0 0 4px;border-bottom:0}
+  #view{grid-area:view;border-radius:10px;overflow:hidden;border:1px solid var(--rule)}
+  #lever{width:84px;justify-self:center;min-height:100px}
+  #helmInfo{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:4px 8px;align-self:start}
+  #helmInfo .lbl{grid-column:1/-1}
+  #helmInfo #rudder{grid-column:2} #helmInfo #center{grid-column:1/-1;min-height:30px}
+  #wheel{width:min(150px,100%);height:auto;aspect-ratio:1;max-height:100%;justify-self:center}
+  .row.r4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .btn{min-height:32px}
+  .g b{font-size:18px}
+}
 @media (prefers-reduced-motion:reduce){ #windArrow,#toast{transition:none} }
 </style>
 
@@ -143,37 +159,33 @@ button:focus-visible,.track:focus-visible{outline:2px solid var(--brass);outline
       <div class="mark" style="bottom:5px">НАЗАД</div>
       <div id="knob">N</div>
     </div>
-    <div class="right">
-      <div id="helm">
-        <div id="wheel" class="track" tabindex="0" aria-label="Штурвал: крутите пальцем по кругу">
-          <svg viewBox="-62 -62 124 124" aria-hidden="true"><g id="wheelG">
-            <g stroke="#7a5534" stroke-width="5" stroke-linecap="round" id="spokes"></g>
-            <circle r="44" fill="none" stroke="#9b7651" stroke-width="8"/>
-            <circle r="44" fill="none" stroke="#c49a6c" stroke-width="2"/>
-            <circle r="11" fill="#2c4652" stroke="#c49a6c" stroke-width="2"/>
-            <circle r="4" fill="#f2a93b"/>
-          </g></svg>
-        </div>
-        <div class="helmSide">
-          <span class="lbl">Перо руля</span>
-          <b id="rVal">0°</b>
-          <div id="rudder" aria-hidden="true"><span class="side" style="left:5px">ЛЕВО</span><span class="side" style="right:5px">ПРАВО</span><div id="rKnob"></div><div id="rNeedle"></div></div>
-          <button class="btn" id="center" type="button">Руль прямо</button>
-        </div>
-      </div>
-      <div class="row r4">
-        <button class="btn" id="fP" type="button">Кранцы<small>левый борт</small></button>
-        <button class="btn" id="fS" type="button">Кранцы<small>правый борт</small></button>
-        <button class="btn" id="pP" type="button">Концы<small>левый борт</small></button>
-        <button class="btn" id="pS" type="button">Концы<small>правый борт</small></button>
-      </div>
-      <div class="row r4" id="lineRow"></div>
-      <div class="row r4">
-        <button class="btn" id="lIn" type="button">Выбрать<small>−0,25 м</small></button>
-        <button class="btn" id="lOut" type="button">Потравить<small>+0,25 м</small></button>
-        <button class="btn" id="lOff" type="button">Отдать<small>снять конец</small></button>
-        <button class="btn eng" id="eng" type="button">Мотор<small>работает</small></button>
-      </div>
+    <div class="helmSide" id="helmInfo">
+      <span class="lbl">Перо руля</span>
+      <b id="rVal">0°</b>
+      <div id="rudder" aria-hidden="true"><span class="side" style="left:5px">ЛЕВО</span><span class="side" style="right:5px">ПРАВО</span><div id="rKnob"></div><div id="rNeedle"></div></div>
+      <button class="btn" id="center" type="button">Руль прямо</button>
+    </div>
+    <div id="wheel" class="track" tabindex="0" aria-label="Штурвал: крутите пальцем по кругу">
+      <svg viewBox="-62 -62 124 124" aria-hidden="true"><g id="wheelG">
+        <g stroke="#7a5534" stroke-width="5" stroke-linecap="round" id="spokes"></g>
+        <circle r="44" fill="none" stroke="#9b7651" stroke-width="8"/>
+        <circle r="44" fill="none" stroke="#c49a6c" stroke-width="2"/>
+        <circle r="11" fill="#2c4652" stroke="#c49a6c" stroke-width="2"/>
+        <circle r="4" fill="#f2a93b"/>
+      </g></svg>
+    </div>
+    <div class="row r4" id="crewRow">
+      <button class="btn" id="fP" type="button">Кранцы<small>левый борт</small></button>
+      <button class="btn" id="fS" type="button">Кранцы<small>правый борт</small></button>
+      <button class="btn" id="pP" type="button">Концы<small>левый борт</small></button>
+      <button class="btn" id="pS" type="button">Концы<small>правый борт</small></button>
+    </div>
+    <div class="row r4" id="lineRow"></div>
+    <div class="row r4" id="actRow">
+      <button class="btn" id="lIn" type="button">Выбрать<small>−0,25 м</small></button>
+      <button class="btn" id="lOut" type="button">Потравить<small>+0,25 м</small></button>
+      <button class="btn" id="lOff" type="button">Отдать<small>снять конец</small></button>
+      <button class="btn eng" id="eng" type="button">Мотор<small>работает</small></button>
     </div>
   </div>
 </div>
