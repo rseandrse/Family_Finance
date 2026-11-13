@@ -44,7 +44,10 @@ button:focus-visible,.track:focus-visible{outline:2px solid var(--brass);outline
 #checkList li.fail i{color:var(--bad)} #checkList li.fail{color:var(--fg)}
 #checkList li.cur{color:var(--fg)} #checkList li.cur i{color:var(--brass)}
 .tools{position:absolute;right:max(10px,env(safe-area-inset-right,0px));top:10px;display:flex;flex-direction:column;gap:6px}
-.tools button{width:38px;height:38px;border-radius:8px;border:1px solid var(--rule);background:rgba(11,22,28,.86);font:600 18px var(--f-disp);cursor:pointer}
+.tools button{width:38px;height:38px;border-radius:8px;border:1px solid var(--rule);background:rgba(11,22,28,.86);font:600 18px var(--f-disp);cursor:pointer;display:grid;place-items:center;padding:0}
+.tools svg{width:20px;height:20px;fill:none;stroke:var(--fg);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.tools button.off{opacity:.45}
+.tools button.off svg .wave{display:none}
 #toast{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);max-width:88%;background:rgba(11,22,28,.92);border:1px solid var(--rule);border-radius:8px;padding:8px 12px;font-size:14px;line-height:1.3;text-align:center;opacity:0;transition:opacity .25s;pointer-events:none}
 #toast.on{opacity:1} #toast.bad{border-color:var(--bad)} #toast.good{border-color:var(--ok)}
 
@@ -127,6 +130,8 @@ button:focus-visible,.track:focus-visible{outline:2px solid var(--brass);outline
       <button id="zIn" type="button" aria-label="Приблизить">+</button>
       <button id="zOut" type="button" aria-label="Отдалить">−</button>
       <button id="setBtn" type="button" aria-label="Сценарий">☰</button>
+      <button id="sndBtn" type="button" aria-label="Звук двигателя"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11"/></svg></button>
+      <button id="vibBtn" type="button" aria-label="Вибрация"><svg viewBox="0 0 24 24"><rect x="8" y="3" width="8" height="18" rx="2"/><path class="wave" d="M4 8v8M20 8v8M1.5 10v4M22.5 10v4"/></svg></button>
     </div>
     <div id="toast" role="status" aria-live="polite"></div>
   </div>
@@ -188,6 +193,7 @@ button:focus-visible,.track:focus-visible{outline:2px solid var(--brass);outline
       <li>Рычаг слева: вверх — вперёд, середина — нейтраль, вниз — реверс.</li>
       <li>Руль работает от потока винта: короткий толчок газом разворачивает даже на месте.</li>
       <li>Концы подаются, когда кнехт лодки в 1,8 м от причала: кнопка подсветится жёлтым.</li>
+      <li>Звук двигателя и вибрация включаются кнопками справа на карте. На iPhone звука не будет, если включён беззвучный режим.</li>
       <li>Приём «на шпринг»: подан носовой шпринг, малый вперёд, руль от причала — корма прижимается.</li>
     </ul>
     <button class="go" id="start" type="button">Начать</button>
@@ -390,7 +396,7 @@ function step(dt){
     const dx=px-ln.b[0],dy=py-ln.b[1],d=Math.hypot(dx,dy);ln.d=d;ln.T=0;
     if(d>ln.len&&d>1e-3){const ex=dx/d,ey=dy/d;const Tn=Math.max(0,C.kLine*(d-ln.len)+C.cLine*(vx*ex+vy*ey));ln.T=Tn;
       EX-=Tn*ex;EY-=Tn*ey;N+=rx*(-Tn*ey)-ry*(-Tn*ex);
-      if(Tn>C.breakT){delete S.lines[L.id];S.dmg+=8;S.hits.push({txt:'Лопнул '+L.name.toLowerCase()+' '+L.sub,pen:8});toast(`Лопнул ${L.name.toLowerCase()} ${L.sub}! Слишком большая нагрузка.`,'bad');renderLineRow();}}
+      if(Tn>C.breakT){delete S.lines[L.id];S.dmg+=8;S.hits.push({txt:'Лопнул '+L.name.toLowerCase()+' '+L.sub,pen:8});toast(`Лопнул ${L.name.toLowerCase()} ${L.sub}! Слишком большая нагрузка.`,'bad');thump(0.8,200);buzz(200);renderLineRow();}}
   }
   Fx+=c*EX+s*EY;Fy+=-s*EX+c*EY;
   S.u+=(Fx+C.my*v*r)/C.mx*dt;
@@ -408,6 +414,7 @@ function impact(spd,soft,boat){
   else{hard=true;pen=spd>0.12?Math.round(5+spd*60):2;txt=(boat?'Задели соседнюю яхту':'Удар корпусом о причал')+(spd>0.12?`, ${spd.toFixed(2)} м/с`:' — царапина');}
   if(!pen)return;
   S.dmg+=pen;S.hits.push({txt,pen,hard});
+  thump(Math.min(1,0.35+spd),soft?70:150);buzz(soft?60:Math.min(400,120+spd*300));
   toast(txt,'bad','hit');
   if(hard&&st('touch').st==='todo'&&!S.secured)mark('touch','fail','удар');
 }
@@ -462,8 +469,8 @@ $('#fS').onclick=()=>tog(S.fend,'stbd','Кранцы вывешены на пр�
 $('#pP').onclick=()=>tog(S.prep,'port','Швартовы разнесены по левому борту','Швартовы левого борта убраны');
 $('#pS').onclick=()=>tog(S.prep,'stbd','Швартовы разнесены по правому борту','Швартовы правого борта убраны');
 $('#eng').onclick=()=>{
-  if(S.engine){if(S.lever!==0){toast('Сначала рычаг в нейтраль','bad');return;}S.engine=false;toast(S.secured?'Двигатель заглушён':'Двигатель заглушён — лодка без хода!',S.secured?'good':'bad');}
-  else{S.engine=true;toast('Двигатель запущен');}
+  if(S.engine){if(S.lever!==0){toast('Сначала рычаг в нейтраль','bad');return;}S.engine=false;buzz(60);toast(S.secured?'Двигатель заглушён':'Двигатель заглушён — лодка без хода!',S.secured?'good':'bad');}
+  else{S.engine=true;S.crank=0.9;sndInit();toast('Двигатель запущен');}
   syncButtons();
 };
 function renderLineRow(){
@@ -509,6 +516,73 @@ function syncButtons(){
   });
   const has=S.sel&&S.lines[S.sel];['#lIn','#lOut','#lOff'].forEach(id=>$(id).disabled=!has);
 }
+
+/* ---------- engine sound & vibration ---------- */
+const FX={snd:true,vib:true,ac:null,rpm:0,gear:0,vibT:0};
+try{const f=JSON.parse(localStorage.getItem('berth-fx')||'null');if(f){FX.snd=!!f.snd;FX.vib=!!f.vib;}}catch(e){}
+const canVibrate=typeof navigator.vibrate==='function';
+let hx=null;
+// iPhone Safari has no Vibration API; on iOS 18+ toggling a "switch" checkbox gives a short haptic tick (best effort).
+function hapticTick(){try{if(!hx){hx=document.createElement('label');hx.setAttribute('aria-hidden','true');hx.innerHTML='<input type="checkbox" switch tabindex="-1">';hx.style.cssText='position:fixed;left:-200px;top:0;opacity:0;pointer-events:none';document.body.appendChild(hx);}hx.click();}catch(e){}}
+function buzz(ms){if(!FX.vib)return;if(canVibrate){try{navigator.vibrate(ms);}catch(e){}}else hapticTick();}
+function sndInit(){
+  if(FX.ac){try{FX.ac.resume();}catch(e){}return;}
+  const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+  let ac;try{ac=new AC();}catch(e){return;}FX.ac=ac;
+  const master=ac.createGain();master.gain.value=0;master.connect(ac.destination);FX.master=master;
+  const eg=ac.createGain();eg.gain.value=0;eg.connect(master);FX.eg=eg;
+  const am=ac.createGain();am.gain.value=1;am.connect(eg);
+  const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=300;lp.Q.value=3;lp.connect(am);FX.lp=lp;
+  const osc=(type,v)=>{const o=ac.createOscillator();o.type=type;const g=ac.createGain();g.gain.value=v;o.connect(g);g.connect(lp);o.start();return o;};
+  FX.o1=osc('sawtooth',0.55);FX.o2=osc('square',0.22);FX.o3=osc('triangle',0.3);
+  FX.lfo=ac.createOscillator();FX.lfo.type='sine';const lg=ac.createGain();lg.gain.value=0.35;FX.lfo.connect(lg);lg.connect(am.gain);FX.lfo.start();
+  const buf=ac.createBuffer(1,ac.sampleRate*2,ac.sampleRate),d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;FX.buf=buf;
+  const noise=(type,f,q)=>{const s=ac.createBufferSource();s.buffer=buf;s.loop=true;const fl=ac.createBiquadFilter();fl.type=type;fl.frequency.value=f;fl.Q.value=q;const g=ac.createGain();g.gain.value=0;s.connect(fl);fl.connect(g);g.connect(master);s.start();return {g,fl};};
+  FX.mech=noise('bandpass',1500,1.2);FX.water=noise('lowpass',400,0.7);
+}
+function thump(vol,freq){
+  const ac=FX.ac;if(!ac||!FX.snd)return;const t=ac.currentTime;
+  const o=ac.createOscillator();o.frequency.setValueAtTime(freq,t);o.frequency.exponentialRampToValueAtTime(freq*0.4,t+0.25);
+  const g=ac.createGain();g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.3);o.connect(g);g.connect(FX.master);o.start(t);o.stop(t+0.32);
+  const s=ac.createBufferSource();s.buffer=FX.buf;const f=ac.createBiquadFilter();f.type='lowpass';f.frequency.value=1100;const gn=ac.createGain();gn.gain.setValueAtTime(vol*0.5,t);gn.gain.exponentialRampToValueAtTime(0.001,t+0.12);s.connect(f);f.connect(gn);gn.connect(FX.master);s.start(t);s.stop(t+0.15);
+}
+function fxUpdate(dt){
+  if(!S)return;
+  const fwd=S.thr>=0, frac=clamp((Math.abs(S.thr)-C.Tidle*(fwd?1:C.Trev))/((C.Tmax-C.Tidle)*(fwd?1:C.Trev)),0,1);
+  let target=0;
+  if(S.crank>0){S.crank-=dt;target=170+60*Math.sin(S.t*40);}
+  else if(S.engine)target=750+2350*Math.sqrt(frac);
+  FX.rpm+=(target-FX.rpm)*Math.min(1,dt/(target<FX.rpm?0.6:0.35));
+  const gear=S.engine&&S.crank<=0?(S.lever>C.DET?1:S.lever<-C.DET?-1:0):0;
+  if(gear!==FX.gear){if(!paused){thump(0.45,85);buzz(35);}FX.gear=gear;}
+  const run=FX.rpm>120, load=FX.rpm/3100;
+  if(FX.ac){
+    const t=FX.ac.currentTime, set=(p,v,tc)=>p.setTargetAtTime(v,t,tc||0.05);
+    const f=Math.max(1,FX.rpm/60*2);           // 4-cylinder diesel: 2 firing strokes per revolution
+    set(FX.o1.frequency,f);set(FX.o2.frequency,f/2);set(FX.o3.frequency,f*1.5);set(FX.lfo.frequency,Math.max(0.5,f/4));
+    set(FX.lp.frequency,160+FX.rpm*0.28);
+    set(FX.eg.gain,run?0.16+0.3*load:0,0.08);
+    set(FX.mech.g.gain,run?0.012+0.07*load*load:0);set(FX.mech.fl.frequency,900+FX.rpm*0.7);
+    set(FX.water.g.gain,Math.min(0.22,S.spd*0.07),0.2);set(FX.water.fl.frequency,250+S.spd*180,0.2);
+    set(FX.master.gain,FX.snd&&!paused?0.8:0,0.08);
+  }
+  // vibration grows with revs: longer pulses on Android, more frequent ticks on iPhone
+  if(FX.vib&&run&&!paused){
+    FX.vibT-=dt;
+    if(FX.vibT<=0){
+      if(canVibrate){FX.vibT=0.25;try{navigator.vibrate(Math.round(6+190*Math.pow(load,1.4)));}catch(e){}}
+      else if(load>0.3){FX.vibT=0.55-0.42*load;hapticTick();}
+      else FX.vibT=0.3;
+    }
+  }
+}
+function fxSave(){try{localStorage.setItem('berth-fx',JSON.stringify({snd:FX.snd,vib:FX.vib}));}catch(e){}
+  $('#sndBtn').classList.toggle('off',!FX.snd);$('#vibBtn').classList.toggle('off',!FX.vib);
+  $('#sndBtn').setAttribute('aria-pressed',String(FX.snd));$('#vibBtn').setAttribute('aria-pressed',String(FX.vib));}
+$('#sndBtn').onclick=()=>{FX.snd=!FX.snd;if(FX.snd)sndInit();fxSave();toast(FX.snd?'Звук включён':'Звук выключен');};
+$('#vibBtn').onclick=()=>{FX.vib=!FX.vib;if(!FX.vib&&canVibrate){try{navigator.vibrate(0);}catch(e){}}fxSave();
+  toast(FX.vib?(canVibrate?'Вибрация включена':'Вибрация включена (на iPhone — только лёгкие отклики, если Safari их поддерживает)'):'Вибрация выключена');if(FX.vib)buzz(40);};
+fxSave();
 
 /* ---------- view ---------- */
 const cv=$('#cv'),ctx=cv.getContext('2d');let VW=0,VH=0,DPR=1;
@@ -618,6 +692,7 @@ function frame(now){
     const tx=S.x+gx*2.5, ty=Math.min(S.y,S.y*0.55+2);cam.x+=(tx-cam.x)*Math.min(1,dt*1.5);cam.y+=(ty-cam.y)*Math.min(1,dt*1.5);
     hudT-=dt;if(hudT<=0){hudT=0.1;hud();evalSteps();syncButtons();}
   }
+  fxUpdate(dt);
   if(S&&VW)draw();
   requestAnimationFrame(frame);
 }
@@ -660,7 +735,7 @@ document.querySelectorAll('.seg').forEach(sg=>sg.addEventListener('click',e=>{co
 $('#wKn').oninput=e=>{SC.wKn=+e.target.value;syncSetup();};
 $('#cKn').oninput=e=>{SC.cKn=+e.target.value;syncSetup();};
 $('#gapM').oninput=e=>{SC.gap=+e.target.value;syncSetup();};
-function start(){try{localStorage.setItem('berth-sc',JSON.stringify(SC));}catch(e){}reset();$('#setup').hidden=true;$('#result').hidden=true;paused=false;syncLever();syncRudder();
+function start(){try{localStorage.setItem('berth-sc',JSON.stringify(SC));}catch(e){}reset();$('#setup').hidden=true;$('#result').hidden=true;paused=false;syncLever();syncRudder();if(FX.snd)sndInit();
   try{navigator.wakeLock&&navigator.wakeLock.request('screen').catch(()=>{});}catch(e){}
   toast(`Курс к причалу. Борт: ${SC.side==='port'?'левый':'правый'}. Не забудьте кранцы и концы.`);}
 $('#start').onclick=start;
