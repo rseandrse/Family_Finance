@@ -158,14 +158,14 @@ button:focus-visible,.track:focus-visible{outline:2px solid var(--brass);outline
 <div class="sheet" id="setup">
   <div class="card">
     <h1>Топливный причал</h1>
-    <p>Подойдите лагом в свободное место между двумя яхтами, не ударив корпус. Лодка 10 м, один винт правого шага, руль за винтом.</p>
+    <p>Подойдите лагом в свободное место между двумя яхтами, не ударив корпус. Лодка 10 м, один винт, руль за винтом. От выбранного двигателя зависит, куда занесёт корму на заднем ходу.</p>
     <div class="field"><span class="lbl">Швартуемся бортом</span><div class="seg" data-k="side"><button data-v="port">Левым</button><button data-v="stbd">Правым</button></div></div>
     <div class="field"><span class="lbl">Ветер</span><div class="seg" data-k="wind"><button data-v="off">Отжимной</button><button data-v="on">Прижимной</button><button data-v="ahead">Встречный</button><button data-v="astern">Попутный</button></div></div>
     <div class="field"><div class="rng"><input id="wKn" type="range" min="0" max="25" step="1"><output id="wKnO"></output></div></div>
     <div class="field"><span class="lbl">Течение вдоль причала</span><div class="seg" data-k="cur"><button data-v="none">Нет</button><button data-v="ahead">Навстречу</button><button data-v="astern">Попутное</button></div></div>
     <div class="field"><div class="rng"><input id="cKn" type="range" min="0" max="1.5" step="0.1"><output id="cKnO"></output></div></div>
     <div class="field"><span class="lbl">Свободное место у причала</span><div class="rng"><input id="gapM" type="range" min="13" max="24" step="1"><output id="gapMO"></output></div></div>
-    <div class="field"><span class="lbl">Заброс кормы на реверсе</span><div class="seg" data-k="pw"><button data-v="1">Влево (правый шаг)</button><button data-v="-1">Вправо (левый шаг)</button><button data-v="0">Нет</button></div></div>
+    <div class="field"><span class="lbl">Двигатель — куда заносит корму на заднем ходу</span><div class="seg" data-k="pw"><button data-v="1">Yanmar · корму влево</button><button data-v="-1">Volvo · корму вправо</button><button data-v="0">Без заброса</button></div></div>
     <ul class="tips">
       <li>Рычаг слева: вверх — вперёд, середина — нейтраль, вниз — реверс.</li>
       <li>Руль работает от потока винта: короткий толчок газом разворачивает даже на месте.</li>
