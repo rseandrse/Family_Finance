@@ -66,15 +66,20 @@ button:focus-visible,.track:focus-visible{outline:2px solid var(--brass);outline
 #knob{position:absolute;left:8px;right:8px;height:34px;margin-top:-17px;border-radius:8px;background:linear-gradient(#2c4652,#1a2e37);border:1px solid #4b6b78;display:grid;place-items:center;font:700 14px var(--f-disp);font-variant-numeric:tabular-nums;pointer-events:none}
 #knob.fwd{border-color:var(--ok)} #knob.rev{border-color:var(--bad)}
 .right{display:flex;flex-direction:column;gap:8px;min-width:0}
-#rudderWrap{display:grid;gap:4px}
-#rudderTop{display:flex;justify-content:space-between;align-items:baseline}
-#rudderTop b{font:600 15px var(--f-disp);font-variant-numeric:tabular-nums}
-#rudder{position:relative;height:42px;border-radius:10px;background:var(--panel);border:1px solid var(--rule);touch-action:none;cursor:ew-resize;overflow:hidden}
-#rudder .tick{position:absolute;top:0;width:1px;height:8px;background:var(--rule)}
+#helm{display:flex;gap:12px;align-items:center}
+#wheel{flex:none;width:120px;height:120px;touch-action:none;cursor:grab;border-radius:50%}
+#wheel:active{cursor:grabbing}
+#wheel svg{width:100%;height:100%;display:block;overflow:visible}
+#wheelG{transform-origin:0 0}
+.helmSide{flex:1;min-width:0;display:grid;gap:6px}
+#rVal{font:700 26px/1 var(--f-disp);font-variant-numeric:tabular-nums}
+#rudder{position:relative;height:22px;border-radius:6px;background:var(--panel);border:1px solid var(--rule);overflow:hidden}
+#rudder .tick{position:absolute;top:0;width:1px;height:6px;background:var(--rule)}
 #rudder .tick.c{height:100%;background:#35525f}
-#rudder .side{position:absolute;bottom:4px;font:600 10px var(--f-disp);letter-spacing:.1em;color:var(--muted)}
-#rKnob{position:absolute;top:5px;bottom:5px;width:30px;margin-left:-15px;border-radius:7px;background:linear-gradient(#2c4652,#1a2e37);border:1px solid var(--brass);pointer-events:none}
-#rNeedle{position:absolute;top:0;width:2px;margin-left:-1px;height:5px;background:var(--brass);pointer-events:none}
+#rudder .side{position:absolute;bottom:3px;font:600 9px var(--f-disp);letter-spacing:.1em;color:var(--muted)}
+#rKnob{position:absolute;top:3px;bottom:3px;width:3px;margin-left:-1.5px;border-radius:2px;background:var(--muted);pointer-events:none}
+#rNeedle{position:absolute;top:0;bottom:0;width:4px;margin-left:-2px;background:var(--brass);pointer-events:none}
+#center{min-height:32px}
 .row{display:grid;gap:6px}
 .r4{grid-template-columns:repeat(4,minmax(0,1fr))}
 .btn{min-height:38px;border-radius:8px;border:1px solid var(--rule);background:var(--panel);font:600 12.5px/1.05 var(--f-disp);letter-spacing:.04em;cursor:pointer;padding:3px 4px;touch-action:manipulation}
@@ -144,9 +149,22 @@ button:focus-visible,.track:focus-visible{outline:2px solid var(--brass);outline
       <div id="knob">N</div>
     </div>
     <div class="right">
-      <div id="rudderWrap">
-        <div id="rudderTop"><span class="lbl">Руль (тап дважды — прямо)</span><b id="rVal">0°</b></div>
-        <div id="rudder" class="track" tabindex="0" aria-label="Руль"><span class="side" style="left:8px">ЛЕВО</span><span class="side" style="right:8px">ПРАВО</span><div id="rNeedle"></div><div id="rKnob"></div></div>
+      <div id="helm">
+        <div id="wheel" class="track" tabindex="0" aria-label="Штурвал: крутите пальцем по кругу">
+          <svg viewBox="-62 -62 124 124" aria-hidden="true"><g id="wheelG">
+            <g stroke="#7a5534" stroke-width="5" stroke-linecap="round" id="spokes"></g>
+            <circle r="44" fill="none" stroke="#9b7651" stroke-width="8"/>
+            <circle r="44" fill="none" stroke="#c49a6c" stroke-width="2"/>
+            <circle r="11" fill="#2c4652" stroke="#c49a6c" stroke-width="2"/>
+            <circle r="4" fill="#f2a93b"/>
+          </g></svg>
+        </div>
+        <div class="helmSide">
+          <span class="lbl">Перо руля</span>
+          <b id="rVal">0°</b>
+          <div id="rudder" aria-hidden="true"><span class="side" style="left:5px">ЛЕВО</span><span class="side" style="right:5px">ПРАВО</span><div id="rKnob"></div><div id="rNeedle"></div></div>
+          <button class="btn" id="center" type="button">Руль прямо</button>
+        </div>
       </div>
       <div class="row r4">
         <button class="btn" id="fP" type="button">Кранцы<small>левый борт</small></button>
@@ -414,8 +432,18 @@ function drag(el,fn,dbl){
     el.addEventListener('pointermove',mv);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);});
 }
 drag(lever,e=>{const b=lever.getBoundingClientRect();let v=1-2*(e.clientY-b.top-22)/(b.height-44);v=clamp(v,-1,1);if(Math.abs(v)<0.07)v=0;S.lever=v;syncLever();});
-drag(rud,e=>{const b=rud.getBoundingClientRect();const v=clamp(((e.clientX-b.left)/b.width)*2-1,-1,1);S.helm=(Math.abs(v)<0.03?0:v)*C.rudMax;syncRudder();},()=>{S.helm=0;syncRudder();});
-(()=>{for(let i=-7;i<=7;i++){const t=document.createElement('div');t.className='tick'+(i===0?' c':'');t.style.left=(50+i*50/7)+'%';rud.appendChild(t);}})();
+// Round wheel: 1.5 turns each way from centre (WHEEL_MAX degrees) = hard over
+const wheel=$('#wheel'),WHEEL_MAX=270;let wLast=null;
+drag(wheel,e=>{const b=wheel.getBoundingClientRect();const a=Math.atan2(e.clientY-(b.top+b.height/2),e.clientX-(b.left+b.width/2))/DEG;
+  if(e.type==='pointerdown'||wLast===null){wLast=a;return;}
+  let d=a-wLast;if(d>180)d-=360;if(d<-180)d+=360;wLast=a;
+  S.helm=clamp(S.helm+d/WHEEL_MAX*C.rudMax,-C.rudMax,C.rudMax);syncRudder();});
+wheel.addEventListener('pointerdown',()=>{wLast=null;},true);
+$('#center').onclick=()=>{S.helm=0;syncRudder();};
+(()=>{const sp=$('#spokes');for(let i=0;i<8;i++){const a=i*45*DEG,l=document.createElementNS('http://www.w3.org/2000/svg','line');
+  l.setAttribute('x1',Math.sin(a)*11);l.setAttribute('y1',-Math.cos(a)*11);l.setAttribute('x2',Math.sin(a)*58);l.setAttribute('y2',-Math.cos(a)*58);
+  if(i===0){l.setAttribute('stroke','#f2a93b');l.setAttribute('stroke-width','6');}sp.appendChild(l);}
+  for(let i=-7;i<=7;i++){const t=document.createElement('div');t.className='tick'+(i===0?' c':'');t.style.left=(50+i*50/7)+'%';rud.prepend(t);}})();
 function syncLever(){
   const b=lever.clientHeight-44, y=22+(1-S.lever)/2*b;knob.style.top=y+'px';
   const v=S.lever,a=Math.abs(v)>C.DET?Math.round((Math.abs(v)-C.DET)/(1-C.DET)*100):0;
@@ -425,6 +453,7 @@ function syncLever(){
 }
 function syncRudder(){
   $('#rKnob').style.left=(50+S.helm/C.rudMax*50)+'%';
+  $('#wheelG').setAttribute('transform',`rotate(${S.helm/C.rudMax*WHEEL_MAX})`);
   const d=Math.round(S.helm/DEG);$('#rVal').textContent=d===0?'0°':`${Math.abs(d)}° ${d>0?'П':'Л'}`;
 }
 document.addEventListener('keydown',e=>{
@@ -653,5 +682,6 @@ syncSetup();reset();resize();syncLever();syncRudder();hud();
 requestAnimationFrame(frame);
 })();
 </script>
+
 </body>
 </html>
